@@ -1,0 +1,1450 @@
+Jeg dykker ned i v1 og finder ud af hvad der er værd at bringe over.Stort overblik. Lad mig fokusere på det der er thesis-relevant: visualiseringer, baselines, decision-distribution, og risk policy.Det her er guldet — det er præcis hvad du skal bruge til IQN-konvergens-figurerne. Lad mig se hvilke plot-funktioner der findes.Det er præcis den slags figur du har brug for til thesisen. Lad mig nu se backtest-visualiseringen og baselines.Lad mig hurtigt se de centrale plot- og rapport-funktioner samt risk_policy.Det her er meget interessant — `compute_action_estimates`, `plot_last_day_quantile_functions`, `plot_last_day_scores`. Det er præcis det infrastructure du har brug for til IQN-konvergens-figurer. Lad mig se compute_action_estimates.Det er præcis det udstyr du har brug for til at lave IQN's distributional convergence-figurer. Lad mig nu lige tjekke om v1 har explicit train_loss vs eval-curve over time.OK, jeg har set nok. Lad mig give dig den komplette vurdering.
+
+---
+
+# V1 → V2: Hvad er værd at bringe over
+
+Først lad mig give dig den ærlige overordnede vurdering: **v1 er en meget enklere arkitektur end v2, men den har faktisk nogle visualiserings- og evalueringsstykker som v2 ikke har bygget endnu**. Det er ikke fordi v1 er bedre — det er fordi v1 var fokuseret på "vis det her i en thesis", og du på et tidspunkt forgrenede dig over til v2 for at bygge ud i bredden (HDP, EDL, hierarki) før du fik fuldt færdiggjort visualiseringen.
+
+Det her er din mulighed for at vinde det tabte terræn tilbage uden at genskabe noget.
+
+## Den korte liste: Det her skal du faktisk porte
+
+### 1. `visualize_iqn_decision_distribution.py` — den vigtigste fil
+
+Det her er din **stærkeste IQN-konvergens-figur**. Den viser fire ting per beslutning i én dashboard:
+
+- Quantile function `F⁻¹(τ)` per action (linjeplot over τ ∈ [0.1, 0.9])
+- Estimated return distribution per action (histogram-density)
+- Risk-adjusted score per action (horisontal bar chart)
+- Decision table med q10/q25/q50/q75/q90/CVaR10 numerisk
+
+Det her er en figur der **konkret demonstrerer at IQN er distributional** og ikke bare point-estimate. Det er præcis det Dabney et al. (2018) Figure 1 viser, men i din finansielle kontekst. **Den figur er din "Figure 1" i thesisen** hvis du vælger at lave den. Den fortæller IQN-historien visuelt på en måde en line-graph aldrig kan.
+
+**Hvad skal du gøre i v2:** Tilføj samme infrastructure i v2 — én ny runner `run_iqn_decision_distribution_export.py` der for et givet checkpoint og en given eval-state dumper de seks kvantiler + CVaR per action til CSV. Derefter port plot-koden næsten 1:1.
+
+### 2. `compute_action_estimates()` fra `backtest_iqn_pit_single_ticker.py`
+
+Det er den helper der konverterer rå IQN-output `[num_quantiles, action_dim]` til pæne `{q10, q25, q50, q75, q90, cvar10, expected_value, risk_adjusted_score}` per action. Det er en helt enkel funktion på ~50 linjer, og den eksisterer ikke i v2 i den form.
+
+Med den her i v2 kan du logge **fulde kvantil-distributioner per eval-state** under hver eval-checkpoint, og så kan du efterfølgende lave **distributional convergence-plot** som du nævnte du gerne ville se: hvordan en aktion's return-fordeling smalner og bliver mere veldefineret over training steps. Det er en IQN-specifik konvergens-figur som du **ikke** kan lave i en almindelig DQN-baseline.
+
+**Hvad skal du gøre i v2:** Læg `compute_action_estimates` i en utility-modul, fx `src/stock_investment_dss/uncertainty/iqn_quantile_estimates.py` (selvom den ikke er uncertainty-relateret), så både EDL-, IQN-, og evalueringsstack kan importere den.
+
+### 3. `summarize_run_results.plot_summary_dashboard()` — den vigtigste rapport-figur
+
+Den 4-panel-figur (return, drawdown, Sharpe, IQN last decision) er den **standardgrafik du har brug for til at sammenligne IQN mod 10 algoritmiske baselines i thesisen**. Den eksisterer ikke i v2 så vidt jeg kan se i de filer jeg gennemgik. Du har baselines i v2's planlægning men ikke den her sammenfattede figur.
+
+**Hvad skal du gøre i v2:** Port koden direkte, men opdater den til at læse fra v2's run-struktur (`outputs/runs/<run_id>/...`). Skift fra `GROUP_COLORS["D-IQN-DSS"]` til v2's tilsvarende navngivning. Stort set bare path-tilpasning og kolonneprefix-tilpasning.
+
+### 4. De 10 algoritmiske baselines i `algorithmic_trading/baselines/`
+
+Du har **10 færdig-implementerede klassiske strategi-baselines** i v1:
+
+- buy_and_hold
+- equal_weight_buy_and_hold (portfolio)
+- sma_crossover (50/200)
+- ema_crossover
+- macd_signal
+- rsi_mean_reversion
+- bollinger_mean_reversion
+- breakout
+- momentum
+- volatility_filter
+
+For din thesis er det her **uvurderligt**. Du har brug for at vise at IQN faktisk **adskiller sig fra** klassiske strategier, ikke bare fra "do nothing". De her 10 baselines er præcis den sammenligningsbase din thesis-formulering kalder for: "improving investor outcomes relative to intuition-based or ad hoc decision making". De *er* den ad hoc/intuition-based decision-making du sammenligner mod.
+
+De er alle small-footprint (~50-80 linjer hver), de er PIT-safe per filnavn, og de bruger den samme `calculate_account_metrics()` infrastruktur som dit hovedrun. De vil **integrere problemfrit** ind i v2's plot_summary_dashboard.
+
+**Hvad skal du gøre i v2:** Port hele `algorithmic_trading/` mappen næsten ufærdiget. Skift kun `from stockdss.algorithmic_trading.metrics...` til `from stock_investment_dss.algorithmic_trading.metrics...`. Det er navne-refactoring, ikke logik-ændring.
+
+### 5. `trading_metrics.calculate_account_metrics()`
+
+Den her funktion er den eneste source of truth for Sharpe/drawdown/return-beregning i v1. Den er konsistent på tværs af alle baselines og IQN backtest. Den **bør være single source of truth i v2 også**, så du ikke ender med tre forskellige Sharpe-beregninger på tværs af IQN, FinRL-baselines, og algoritmiske baselines.
+
+**Hvad skal du gøre i v2:** Port den uændret. Det er ~50 linjer ren pandas/numpy. Ingen afhængigheder. Læg den i `src/stock_investment_dss/metrics/trading_metrics.py` og refactor alle steder der beregner Sharpe/drawdown/return til at bruge den.
+
+### 6. `compare_algorithmic_results.py` — markdown-rapport-generator
+
+Den her genererer en pæn markdown-tabel med ranking på return, Sharpe, drawdown, kombineret rank, plus key insights. Det er **den slags rapport-output din thesis-appendix har brug for**.
+
+**Hvad skal du gøre i v2:** Port næsten ufærdig. Den læser metric-CSVer fra en run-mappe og spytter markdown ud. Path-tilpasning er den eneste reelle ændring.
+
+## Den korte liste: Det du IKKE bør bringe over
+
+For at være ærlig om hvad der **ikke** er værd at hente:
+
+- **`train_iqn_finrl_single_ticker.py`** og resten af single-ticker IQN-træningskoden er gammelt; v2's `run_iqn_learning_curve_smoke_test.py` har overhalet det.
+- **`iqn_runner.py`** er en gammel orchestrator der køres som CLI. Den passer ikke ind i v2's manifest-driven setup. Lad den ligge.
+- **v1's `risk_policy.py`** er tom (0 linjer). Den eksisterer ikke som faktisk fil. Ignorér.
+- **v1's `envs/finrl_continuous_env.py`** og `finrl_discrete_env.py` er erstattet af v2's mere modne `discrete_finrl_decision_env.py` med action-masking. Lad dem ligge.
+- **CartPole-træningskoden** er ren development scaffolding. Den hører ikke hjemme i thesis-aflevering.
+
+## Prioritering — hvis du har en time, gør det her
+
+1. **Port `trading_metrics.calculate_account_metrics()`** først. Det er en single-file port og bliver fundament for alt andet.
+2. **Port alle 10 baselines** til v2. ~30 minutters arbejde fordi de er stateless-funktionelle. Test at de kører på din frozen `market_data_demo10_new_2010_2026.csv`.
+3. **Port `plot_summary_dashboard()` fra `summarize_run_results.py`**. Det giver dig en thesis-klar 4-panel-figur per run.
+
+Det er det. Gør de tre ting, så har du en thesis-rapport-pipeline der kan sammenligne IQN mod 10 baselines visuelt og numerisk.
+
+## Hvis du har en eftermiddag
+
+4. **Port `visualize_iqn_decision_distribution.py`** og `compute_action_estimates()`. Det giver dig IQN-distributional-figuren som er din **stærkeste enkelt-figur til thesisen**.
+5. **Skitsér distributional convergence-figuren**: for et givet eval-state, plot kvantilfordelingen ved checkpoint 5000, 10000, 15000, 20000, 25000. Hvis IQN faktisk lærer, smalner fordelingen for den optimale action og spreder for sub-optimale. Det er den figur du ikke kan få fra DQN, og som retfærdiggør IQN i din thesis.
+
+Vil du have at jeg laver et konkret port-snippet til den ene af de her? Hvis du vælger én, ville jeg foreslå **`trading_metrics.py` og baselines-mappen** først, fordi det er det der låser hele rapport-stakken op for resten af v2. Det er ~150 linjer kode total at flytte.
+
+
+--------------
+
+ME:
+
+Jeg tænker da enlig ALT brugbart fra V1 skal med over i V2
+
+Særligt den del hvor man kan sætte et point in time , en portfolie, et aktie univers og så få kørt 
+
+* Algoritmic baselines
+* FinRL Baselines
+* Min IQN
+* Og derefter få summary og resultater og plots
+
+Men altså jeg trode enlig den gamle måde "v1" måden, at have en python runner som bare kørte alt, enlig måske var nemmere for min professor at gennemskue
+
+Jeg kan også godt lave en run-thesis.ipynb eller sådan noget i v2 hvor det "Hele" kan kørers
+
+Eller hvad mener du præcis med at v2 er mere avanceret og bedre hvordan det køres
+
+ALT DU HAR SAGT INDTIL VIDERE ER GULD (!)
+
+JEG TÆNKER PRÆCIST AT DET BLIVER
+1) LØS HOLD PROBLEMET MED IQN
+2) PORT FRA V1 TIL V2
+
+
+---------------
+
+Det er to gode prioriterings-spørgsmål, og du har faktisk allerede svaret på det vigtigste selv: rækkefølgen 1) løs HOLD, 2) port fra v1. Det er den rigtige rækkefølge. Lad mig svare ærligt på det andet — om v1's runner-stil er bedre eller værre for din professor.
+
+## Det reelle spørgsmål: hvad ser bedst ud for din censur?
+
+Det her er ikke et teknisk spørgsmål — det er et thesis-præsentations-spørgsmål. Lad mig være konkret om hvad jeg ser:
+
+**v1's stil:** Én Python-runner (`iqn_runner.py`) der orchestrerer alt via CLI-args. Du skriver `python -m stockdss.runner.iqn_runner --ticker AAPL --date 2026-01-12 --strategy growth` og den kører hele kæden.
+
+**v2's stil:** Manifest-driven (`clean_25k_baseline_v1.json`) + verifier + thin adapter + launcher. Du skriver `python -m stock_investment_dss.runner.run_iqn_experiment_from_config --config <manifest>` og det validerer config før det kører.
+
+**Hvad er forskellen for din professor?** Et single Python-script er nemt at læse, åbne, og forstå hvad der sker linje for linje. Et manifest-system er sværere at læse umiddelbart (man skal følge config-file → verifier → adapter → launcher → subprocess), men det er **reproducérbarhedssikret**. Det er forskellen mellem "kør én gang, læs koden" og "kør 100 gange, ingen drift, audit trail".
+
+Din professor er Melih Kandemir. Han kender deep learning og reproducerbarhed. Han vil sandsynligvis sætte pris på manifest-systemet, **fordi det demonstrerer metodologisk modenhed**. Men det er en *demonstration ud over thesisens egentlige bidrag* — det er ikke kernen. Kernen er IQN + EDL + risk-aware decisions.
+
+## Mit konkrete svar
+
+**Behold v2's manifest-system som production-pipeline.** Det er det der gør at dine resultattal er reproducérbare og at du kan stå inde for dem i en aflevering. Det er det der retfærdiggør at du kan sige "her er mit clean baseline, her er hvordan jeg verificerede config var ren, her er hvordan jeg afdækkede contamination-bug'en". Det er en stærk metodologisk historie der hører hjemme i kapitel 4 (Implementation/Methodology) i din thesis.
+
+**Men byg samtidig en `run_thesis.ipynb` eller `run_thesis_demo.py` ovenpå.** Det er det din professor — og evt. en webbaseret PoC-demonstration — kan køre uden at skulle forstå hele manifest-stakken. Den notebook'en gør konceptuelt det her:
+
+```
+1. Sæt point-in-time, portfolio, ticker universe i en celle.
+2. Indlæs det clean_25k IQN-checkpoint (allerede trænet, gemt på disk).
+3. Kør alle 10 algoritmiske baselines på samme PIT-window.
+4. Kør FinRL baselines (PPO/A2C/SAC fra FinRL) på samme window.
+5. Kør IQN-inferens på samme window.
+6. Saml alt i et plot_summary_dashboard().
+7. Vis IQN's distributional decision-figur for et enkelt valgt eval-step.
+8. Skriv markdown-rapport.
+```
+
+Det er **inference-only**, ikke træning. Træning er det v2's manifest-system håndterer. Den notebook er showcase-laget ovenpå, og den får al sin power fra at læse pre-computed artefakter fra disk.
+
+Det betyder du har **to tracks**:
+
+- **Training/research track** (v2's manifest-pipeline): producerer checkpoints, training records, eval records, summary JSONs. Det er hvad du bruger til at producere resultaterne. Det er hvor du bekæmper HOLD-attractoren.
+- **Demo/thesis track** (`run_thesis.ipynb` eller tilsvarende): læser pre-computed artefakter, kører inference + baselines, genererer figurer. Det er hvad du viser professor, hvad du baserer rapport-figurerne på, og hvad du kan dække i en webbaseret PoC.
+
+Det er rent arkitektonisk. Det ene erstatter ikke det andet.
+
+## Hvorfor det her er bedre end at gå tilbage til v1's runner-stil
+
+Hvis du går tilbage til v1-stil og smider v2's manifest-system væk, taber du tre ting:
+
+1. Forsvaret mod kontaminering du lige har bygget. Det er ren regression.
+2. Den metodologiske historie at fortælle i thesisen om hvordan du afdækkede og isolerede en confounder. Det er en *stærk* historie.
+3. Muligheden for at gentage runs deterministisk. Det er det der gør at du kan reagere på reviewer-feedback efter aflevering.
+
+Men hvis du **kun** har v2's manifest-system uden en demo-notebook, taber du noget andet:
+
+1. Den enkle "kør én gang for at se det hele"-oplevelse din professor sandsynligvis foretrækker.
+2. En naturlig basis for en webbaseret PoC.
+3. En reproducerbar måde at lave thesisens hovedfigur (multi-baseline-sammenligning).
+
+Derfor: behold begge dele, lad dem løse forskellige problemer.
+
+## Konkret plan for v1 → v2 port
+
+Lad mig opdatere prioriteringen baseret på "alt brugbart skal med":
+
+**Fase 1: Fundamentet (en eftermiddag, blokkende for alt andet)**
+
+1. Port `trading_metrics.py` til `src/stock_investment_dss/metrics/trading_metrics.py`. Det er den ene canonical Sharpe/drawdown/return-beregning.
+2. Port hele `algorithmic_trading/` mappen til `src/stock_investment_dss/algorithmic_trading/`. 10 baselines + experiments + compare_algorithmic_results.
+3. Test at én baseline kører end-to-end på din frozen `market_data_demo10_new_2010_2026.csv`. Hvis sma_crossover kører, kører de andre 9 også fordi de deler infrastructure.
+
+**Fase 2: Visualization stack (en eftermiddag)**
+
+4. Port `visualize_iqn_decision_distribution.py` til `src/stock_investment_dss/visualization/iqn_decision_distribution.py`. Tilpas til v2's data layout.
+5. Port `compute_action_estimates()` til `src/stock_investment_dss/uncertainty/iqn_quantile_estimates.py` eller `src/stock_investment_dss/metrics/iqn_quantile_estimates.py` (jeg ville faktisk vælge metrics-mappen siden det ikke er uncertainty-relateret).
+6. Port `plot_summary_dashboard()` fra `summarize_run_results.py` til `src/stock_investment_dss/visualization/summary_dashboard.py`. Tilpas til v2's run-paths.
+
+**Fase 3: Demo track (en eftermiddag)**
+
+7. Skriv `run_thesis.ipynb` eller `run_thesis_demo.py` der orchestrerer fase 1 + fase 2 i én lineær flow:
+   - Vælg PIT date, portfolio, ticker universe i toppen
+   - Kald algoritmiske baselines
+   - Kald FinRL baselines
+   - Indlæs IQN checkpoint, kør inference på samme PIT-window
+   - Generér alle figurer
+   - Skriv markdown-rapport
+
+**Vigtigt:** Fase 1 og 2 skal kunne genbruges af både v2's training-pipeline (til post-training analysis) og den nye notebook. De skal være rene utility-moduler uden hardcoded paths.
+
+## Den ene ting jeg vil flagge før du går i gang
+
+V1's runner kører **træning på inference-tidspunkt** (eller forventer at gøre det). Det er det der gør at den er nem at læse men også langsom. I v2 vil du have **pre-trained IQN checkpoint på disk** efter clean_25k_baseline har kørt, og notebooken skal **kun gøre inference**. Det er en arkitektonisk ændring du skal være eksplicit om.
+
+Det betyder også: din notebook kan ikke køre før du har et IQN-checkpoint. Du skal altså køre clean_25k_baseline_v1 **først**, vente på det er færdigt (det er en multiseed run, så et stykke tid), og derefter pege notebooken på checkpoint-pathen. Det er ikke et problem — det er bare en afhængighed du skal kommunikere klart i README'en eller i notebook'ens første celle.
+
+## Tilbage til prioritering
+
+Du sagde rækkefølgen 1) løs HOLD, 2) port fra v1. Jeg er enig **med én nuance**:
+
+Du kan parallelisere lidt. Mens clean_25k_baseline_v1 kører (det tager tid), kan du starte port-arbejdet på fase 1 (trading_metrics + baselines). Det er stateless arbejde der ikke afhænger af IQN-resultater. Når clean_25k er færdig:
+
+- Hvis HOLD-collapse er <2/10: gå direkte til fase 2+3 af porten og skriv thesis.
+- Hvis HOLD-collapse er 3-5/10: rapportér det ærligt som finding, parallelt med port. Begge spor fortsætter.
+- Hvis HOLD-collapse er >5/10: stop port. Fokuser på HOLD-debugging (action mask logging, reward scaling, Q-value spread). Port kan vente.
+
+Det er den ene rationelle prioritering jeg kan se. Du vinder tid hvis HOLD viser sig at være fixet eller acceptabelt; du taber ingen tid hvis det ikke er, fordi du falder tilbage til debugging.
+
+Vil du have at jeg starter på fase 1-porten konkret? Jeg kan skitsere de tre filer (`trading_metrics.py`, en eksempel-baseline, og `compare_algorithmic_results.py`) tilpasset v2's import-paths og kataloglayout, så du har en klar template at følge for de andre 9 baselines. Det er sandsynligvis ~200 linjer kode i tre filer, og det giver dig en konkret start at trykke kør på mens HOLD-baseline kører.
+
+------------------
+
+
+ME:
+
+Det er rigtig fint alt sammen, men der er to ting vi lige skal ha på plads
+
+1) v2 manifes stilen, og manifest-systemet osv og særligt betegnelsen "clean_25k_baseline_v1" kan jeg slet ikke forstå, er det noget der kom fra Copilot? 
+
+"
+v2's stil: Manifest-driven (`clean_25k_baseline_v1.json`) + verifier + thin adapter + launcher. Du skriver `python -m stock_investment_dss.runner.run_iqn_experiment_from_config --config <manifest>` og det validerer config før det kører.
+Hvad er forskellen for din professor? Et single Python-script er nemt at læse, åbne, og forstå hvad der sker linje for linje. Et manifest-system er sværere at læse umiddelbart (man skal følge config-file → verifier → adapter → launcher → subprocess), men det er reproducérbarhedssikret. Det er forskellen mellem "kør én gang, læs koden" og "kør 100 gange, ingen drift, audit trail".
+Din professor er Melih Kandemir. Han kender deep learning og reproducerbarhed. Han vil sandsynligvis sætte pris på manifest-systemet, fordi det demonstrerer metodologisk modenhed. Men det er en demonstration ud over thesisens egentlige bidrag — det er ikke kernen. Kernen er IQN + EDL + risk-aware decisions.
+Mit konkrete svar
+Behold v2's manifest-system som production-pipeline. Det er det der gør at dine resultattal er reproducérbare og at du kan stå inde for dem i en aflevering. Det er det der retfærdiggør at du kan sige "her er mit clean baseline, her er hvordan jeg verificerede config var ren, her er hvordan jeg afdækkede contamination-bug'en". Det er en stærk metodologisk historie der hører hjemme i kapitel 4 (Implementation/Methodology) i din thesis.
+Men byg samtidig en `run_thesis.ipynb` eller `run_thesis_demo.py` ovenpå. Det er det din professor — og evt. en webbaseret PoC-demonstration — kan køre uden at skulle forstå hele manifest-stakken. Den notebook'en gør konceptuelt det her:
+"
+
+Altså, jeg husker ihvertfald ikke hvad det er eller gør, og hvis det netop er for at give nogle bedre configs end mit normale opdaterede iqn_stockdss_default.json så fair nok men ellers skal jeg altså lige fatte hvad det er og hvad det gør
+
+Og du nævner også 
+
+Training/research track (v2's manifest-pipeline): producerer checkpoints, training records, eval records, summary JSONs. Det er hvad du bruger til at producere resultaterne. Det er hvor du bekæmper HOLD-attractoren.
+
+Betyder det så ikke også at vi gerne skal eksportere og gemme nogle modeller, og måske også en endelig IQN Agent Model som så kunne potentielt loades af andre?
+
+2)
+
+Du laver en fin phase plan, men kunne du ikke lige opdatere den og starte med phase 0, hvor du så lige placere hele HOLD diagnosticeringen (jeg fangede godt det med at jeg kan porte ting fra v1 til v2 mens HOLD scriptet kører, smart!)
+
+Du må gerne netop i phase 0 så omkring hold problematikke skitserer op hvordan du ville gribe det an og i hvilken rækkefølge.
+
+Jeg har fx tidligere arbejdet med/ud fra denne todo roadmap fil:
+
+" pasted "
+
+
+-------------
+
+Claude:
+
+Begge spørgsmål er helt fair, og du har ret i at jeg har gjort dem mudrede. Lad mig rydde op.
+
+## Spørgsmål 1: Hvad er `clean_25k_baseline_v1.json` egentlig?
+
+Du husker det ikke fordi du selv lavede det med Copilot for et par dage siden — det er i din uploaded VS Code-chathistorik fra forrige tur. Det er ikke noget *jeg* har introduceret, det er noget Copilot byggede til dig som svar på din egen anmodning om at opdage og forhindre den config-kontaminering der ødelagde dine May 22-runs.
+
+Lad mig forklare hvad det reelt **er** og **gør**, simpelt:
+
+### Hvad det er
+
+Det er **én JSON-fil** som indeholder alle config-værdier for ét specifikt eksperiment. Tænk på det som "denne kørsel af 10 seeds for clean baseline blev kørt med PRÆCIS disse hyperparametre, og her er beviset på det". Det er konceptuelt det samme som et eksperiment-snapshot.
+
+Filen indeholder fire ting:
+
+```
+1. dataset specifikation     (hvilke tickers, hvilket datasæt, hvilke datoer)
+2. iqn hyperparametre        (batch_size=64, lr=0.0001, osv.)
+3. env_overrides             (de samme værdier oversat til env vars)
+4. expected_iqn_config       (assertions: "verifier at dette er hvad der KØRES")
+```
+
+### Hvad det gør forskelligt fra `iqn_stockdss_default.json`
+
+`iqn_stockdss_default.json` (ChatGPT's anbefaling som du lige opdaterede) er **default-værdier for IQN-preset'et**. Det er sat ind i kode-stakken via `IQNConfig` og bruges hvis intet andet er specificeret.
+
+`clean_25k_baseline_v1.json` er **ét specifikt eksperiment-snapshot**. Det siger ikke kun "her er IQN-config" — det siger også "dette eksperiment kørte på demo_10_new_long_2010_2026, med disse 10 tickere, fra denne dato til denne dato, med seeds 1-10, og verifier-koden bekræfter at ingen .env-kontaminering ændrer det".
+
+Forskellen er **scope**:
+
+- `iqn_stockdss_default.json` = "hvad er fornuftige IQN-defaults?"
+- `clean_25k_baseline_v1.json` = "hvad præcis kørte i mit clean baseline run #1?"
+
+Du kunne i princippet lave `clean_25k_baseline_v2.json` senere med samme IQN-defaults men på et andet datasæt eller med andre tickere. Hvert nyt eksperiment får sit eget manifest så du senere kan spore: "Hvilke runs i mine outputs blev kørt med hvilken nøjagtig config?"
+
+### Er det "for godt"? Bør du beholde det?
+
+Ja, behold det. Det er det eneste der forhindrer at den kontaminering du oplevede sker igen. Det kostede dig flere dages diagnose at finde kontamineringen. Manifestet + verifier sørger for at det ikke gentager sig.
+
+**Men du behøver ikke have det i front-of-mind hver dag.** Det skal stort set bare være der i baggrunden. Når du skal køre et eksperiment, kalder du `run_iqn_experiment_from_config.py` med manifestet, og hele tjekket sker automatisk. Du tænker kun på det når du ændrer det.
+
+### Om at gemme modeller
+
+Ja, og det er en virkelig vigtig observation fra din side. Lad mig være eksplicit om hvad du skal gemme efter clean_25k_baseline_v1 kører færdig:
+
+```
+outputs/runs/<run_id>/
+├── seed_1/
+│   ├── checkpoints/
+│   │   ├── iqn_step_5000.pt
+│   │   ├── iqn_step_10000.pt
+│   │   ├── iqn_step_15000.pt
+│   │   ├── iqn_step_20000.pt
+│   │   └── iqn_step_25000.pt        ← FINAL MODEL
+│   ├── training_records.csv
+│   └── eval_records.csv
+├── seed_2/
+│   ... osv
+└── best_model_summary.json           ← peger på den bedste seed
+```
+
+Jeg så ikke i v2-koden om dette **allerede** sker eller om checkpoint-gemning er disabled. Det er værd at verificere. Hvis det ikke sker, så er det det første du skal tilføje før clean baseline kører — for hvis du ikke gemmer modellerne, kan du ikke senere lave inference fra dem i din `run_thesis.ipynb`. Og du kan ikke lave distributional convergence-figuren jeg foreslog.
+
+**Vil du have at jeg lige verificerer det her i v2-koden mens vi taler?** Det tager 30 sekunder. Det ville være pinligt at opdage efter clean baseline har kørt 8 timer at modeller ikke blev gemt.
+
+## Spørgsmål 2: Opdateret plan med fase 0 — HOLD-problematikken først
+
+Ja, det er den rigtige rækkefølge. Her er den ærlige fulde plan:
+
+### Fase 0: Verificér og kør clean baseline (1-2 dage)
+
+**Mål:** Få et rent IQN baseline-tal du kan stå inde for. Ingen scope-udvidelse før dette tal eksisterer.
+
+**Trin 0.1 — verifikation før kørsel** (30 minutter):
+- Verificér at v2 gemmer model-checkpoints per seed per eval_interval. Hvis ikke, fix det først.
+- Tilføj `epsilon_eval=0.0` eksplicit til både `env_overrides` og `expected_iqn_config` i manifestet.
+- Tilføj `eval_interval=2000` (i stedet for 5000) for at få ~12 datapunkter på convergence-kurver.
+- Tilføj `STOCK_INVESTMENT_DSS_FINRL_ENV_REWARD_SCALING` til både `env_overrides` og `_IQN_HYPERPARAMETER_ENV_VARS` listen i verifieren — det er en env-side parameter som heller ikke skal kontamineres.
+- Verificér én sidste gang at manifestets værdier matcher `iqn_stockdss_default.json` (den nye opdaterede version fra ChatGPT). De skal være konsistente. Hvis ikke, så enten opdater manifestet eller forklar hvorfor de afviger.
+
+**Trin 0.2 — kør clean_25k_baseline_v1** (et par timer):
+- `scripts/run_clean_25k_baseline_v1.ps1` med STEP 4 uncommented
+- Lad alle 10 seeds køre
+- Mens den kører: start fase 1-porten (se nedenfor)
+
+**Trin 0.3 — analyser resultatet:**
+
+Tre tal afgør om HOLD er løst:
+
+1. **Collapse rate**: antal seeds med eval HOLD% > 90% af de 10
+2. **Mean training masked-rate**: hvor stor procentdel af training-steps blev requested action blokeret af masken og fallback'et til HOLD?
+3. **Mean Q-value spread** for de første 100 eval-states: `max_a Q(s,a) - second_max_a Q(s,a)`
+
+**Decision tree baseret på (1):**
+
+- **0-1/10 collapse**: HOLD løst. Gå direkte til fase 2 (visualisering) og senere fase 3 (demo notebook). Skriv thesis.
+- **2-4/10 collapse**: Iboende attractor. Acceptér og rapportér ærligt. Gå videre til fase 1-3, men inkluder en thesis-sektion om "Discussion: Inherent HOLD attractor in value-based RL on bull-market data". Det er stadig en valid thesis.
+- **5+/10 collapse**: Stop. Brug (2) og (3) til at diagnosticere:
+  - Hvis (2) > 30%: action mask er for stram. Eksperimenter med `enforce_action_mask=False`.
+  - Hvis (3) < 0.01: numerisk problem (Q-værdier degenereret til ~0). Eksperimenter med `reward_scaling=0.001` (10× højere) eller `state_norm_scale` tuning.
+  - Hvis begge er normale: dybere RL-problem. Sandsynligvis exploration ikke nok. Test `epsilon_final=0.1` eller `epsilon_eval=0.05`.
+
+**Trin 0.4 — ekstra logging for at få (2) og (3)**:
+
+Du skal sandsynligvis tilføje to logging-bits i v2 for at få tallene fra (2) og (3). De er ikke i koden endnu (eller var de ikke da jeg sidst kiggede). Jeg kan skitsere de ~30 linjer kode hvis du vil have det — det er en minimal patch der ikke ændrer træningsadfærd, kun loggning.
+
+### Fase 1: Fundament-porten (parallelt med fase 0-træning)
+
+Mens clean baseline kører, gør du dette:
+
+1. **Port `trading_metrics.py`** til `src/stock_investment_dss/metrics/trading_metrics.py`
+2. **Port hele `algorithmic_trading/` mappen** til `src/stock_investment_dss/algorithmic_trading/`
+3. **Refactor v2's eksisterende Sharpe/return/drawdown-beregninger** til at importere fra `trading_metrics.py`
+4. **Test at én baseline (fx sma_crossover) kører end-to-end** på `market_data_demo10_new_2010_2026.csv`
+
+Output efter fase 1: 10 algoritmiske baselines er kørbare i v2. Single source of truth for metrics findes.
+
+### Fase 2: Visualization-stack (efter fase 0 er færdig)
+
+1. **Port `compute_action_estimates()`** til `src/stock_investment_dss/metrics/iqn_quantile_estimates.py`
+2. **Port `visualize_iqn_decision_distribution.py`** (dashboard + quantile + distribution plots)
+3. **Port `plot_summary_dashboard()`** fra `summarize_run_results.py`
+4. **Port `compare_algorithmic_results.py`** (markdown-rapport-generator)
+
+Output efter fase 2: Du kan generere alle IQN-specifikke + summary-figurer fra trænede checkpoints. Distributional convergence-figuren bliver mulig.
+
+### Fase 3: Demo/showcase-track
+
+1. **Bygg `run_thesis_demo.py`** (eller .ipynb) der orchestrerer det hele fra ét entrypoint:
+   - Vælg PIT-window, portfolio, ticker universe
+   - Kør 10 algoritmiske baselines på samme window
+   - Kør FinRL baselines (PPO/A2C/SAC) på samme window
+   - Indlæs IQN checkpoint fra fase 0, kør inference på samme window
+   - Generér alle figurer
+   - Skriv markdown-rapport
+
+Output efter fase 3: Single-command demonstration der din professor (og senere webbaseret PoC) kan køre.
+
+### Fase 4: Thesis-skrivning (parallelt med fase 3 eller efter)
+
+Skriv kapitlerne. Brug fase 0-2 output direkte:
+
+- Kapitel 3 (Methodology): manifest-system, verifier, kontamineringsdiagnose
+- Kapitel 4 (Implementation): IQN-stak, action mask, HDP (hvis du beholder det)
+- Kapitel 5 (Results): clean baseline-tal, baselines-sammenligning, distributional figures
+- Kapitel 6 (Discussion): HOLD-attractoren, risk-sensitive scoring som retning, EDL-A som fremtidigt arbejde
+- Kapitel 7 (Conclusion): hvad blev vist, hvad blev ikke
+
+### Fase 5: EDL-A (hvis tid)
+
+Den vi diskuterede i tidligere ture. Hindsight oracle, EDL-A dataset builder, EDL-A træning. **Kun hvis fase 0-4 er færdige med tid til overs.** Det er en separat thesis-tilføjelse, ikke en kerne-leverance.
+
+## Hvad jeg konkret anbefaler at gøre nu
+
+1. Lad mig **først tjekke om v2 gemmer model-checkpoints** korrekt. Det er det eneste blokerende spørgsmål før clean baseline kører.
+2. Derefter **opdater manifestet** med de fire små tilføjelser (epsilon_eval, eval_interval, reward_scaling, hvis nødvendigt en assertion-justering).
+3. Derefter **kør clean baseline** og **start fase 1-porten parallelt**.
+
+Vil du have at jeg laver verifikationen af checkpoint-gemning nu? Det er det eneste der kunne være en blocker. Resten kan vente til efter du trykker kør.
+
+
+------------
+
+
+Perfect — du har den rigtige indstilling. Lad mig være ærlig om hvad du faktisk kan nå inden søndag aften, fordi din roadmap-rest indeholder ting der ikke alle kan nås.
+
+## Brutal sortering af din resterende roadmap
+
+Lad mig markere hver linje med Ja/Nej/Måske baseret på din deadline:
+
+```
+Clean HOLD diagnostic interpretation note     → JA, gør det først (30 min)
+V1 thesis visualization ports                 → JA, kerne-leverance (3-4 timer)
+EDL-A dataset builder                         → NEJ, future work
+Reference-aligned EDL-A training              → NEJ, future work
+IQN + HDP + EDL-A gate                       → NEJ, future work
+Ablation suite                                → DELVIS — kun IQN/IQN+HDP/IQN+HDP+EDL-C
+Demo comparison summary                       → JA, kerne-leverance (2 timer)
+Demo comparison plots                         → JA, kerne-leverance (1-2 timer)
+Thesis evidence package                       → JA, samler alt (1 time)
+Demo_30 Mode B                                → NEJ
+IQN hyperparameter tuning                     → NEJ
+CHANGE_STRATEGY reactivation                  → NEJ
+Watchlist / candidate universe                → NEJ
+Existing portfolio input                      → NEJ
+Recommendation engine                         → NEJ
+Audit log                                     → ✅ done
+Common evaluation suite                       → ✅ done
+```
+
+**JA-listen er din realistiske weekend.** Resten er future work eller allerede done.
+
+## Hvorfor EDL-A skal være future work (ikke negotiable)
+
+Du har ikke kørt EDL-A endnu. Hvis du forsøger det denne weekend skal du:
+
+1. Køre `run_edl_counterfactual_hindsight_labeling_smoke_test.py` på din combined audit
+2. Køre `run_edl_action_dataset_v2_builder.py` med EDL-A labels
+3. Træne EDL-A klassifikatoren
+4. Validere den
+5. Bygge gate-integration med EDL-A i stedet for EDL-C
+6. Køre ablation IQN+HDP+EDL-A vs IQN+HDP+EDL-C
+
+Det er minimum 8 timers arbejde **hvis intet går galt**. Realistisk: 12-15 timer med debugging. Du har ikke tid.
+
+**Det du HAR:** EDL-C trænet og fungerende som integration evidence (jf. `edl_v3_3_training_v2_comparison_and_leakage_audit.md`). Det er **nok** til thesis. EDL-C demonstrerer at uncertainty-track er implementeret end-to-end. EDL-A er en metodologisk forfinelse der hører hjemme i "Future Work"-kapitlet.
+
+## Den fulde plan for resten af weekenden
+
+### Resten af lørdag (15:50 → sengetid)
+
+**Trin 1 (15:50-16:15): Skriv HOLD diagnostic interpretation note**
+
+Ikke et stort dokument. Bare en `docs/clean_25k_hold_diagnostic_interpretation.md` med:
+- Hvad du kørte (config, dataset, seeds)
+- Hovedfund (1/10 collapse, masked_action_rate=0, Q-spread non-zero)
+- Sammenligning mod kontamineret 50k (7/10 → 1/10)
+- Konklusion: HOLD er en Q-policy attractor i isolerede seeds, ikke systemisk
+- Limitations: negativ konvergens efter step 10k, 25k er måske over optimal horizon
+
+Det her er **færdigt på 25 minutter**. Du har allerede mest af det skrevet i `clean_25k_hold_diagnostic_summary.md`. Refrasér og tilføj limitations-sektion.
+
+**Trin 2 (16:15-19:00): V1 thesis visualization ports — Copilot-batch**
+
+Det er det arbejde Copilot kan gøre mens du superviserer. Her er instruks-rækken:
+
+```
+INSTRUKS BATCH 1 til Copilot (kan køre parallelt):
+
+A) Port v1's src/stockdss/algorithmic_trading/metrics/trading_metrics.py 
+   til v2's src/stock_investment_dss/metrics/trading_metrics.py.
+   Tilpas imports. Kør py_compile.
+
+B) Port v1's src/stockdss/algorithmic_trading/baselines/ mappen (10 filer)
+   til v2's src/stock_investment_dss/algorithmic_trading/baselines/.
+   Tilpas imports. Kør py_compile på alle 10.
+
+C) Port v1's src/stockdss/rl/experiments/visualize_iqn_decision_distribution.py
+   til v2's src/stock_investment_dss/visualization/iqn_decision_distribution.py.
+   Tilpas til v2's data layout og imports.
+
+D) Port v1's compute_action_estimates() funktion fra 
+   src/stockdss/rl/experiments/backtest_iqn_pit_single_ticker.py
+   til v2's src/stock_investment_dss/metrics/iqn_quantile_estimates.py.
+
+E) Port v1's plot_summary_dashboard() funktion fra
+   src/stockdss/runner/summarize_run_results.py
+   til v2's src/stock_investment_dss/visualization/summary_dashboard.py.
+
+F) Port v1's compare_algorithmic_results.py til v2.
+
+Efter alle ports: kør én smoke-test der kalder hver enkelt port med 
+dummy-data og verificerer at de virker uden runtime errors.
+```
+
+Mens Copilot arbejder, du tjekker output og fixer fejl.
+
+**Trin 3 (19:00-21:00): Verificér porte + IQN-decision-distribution figur fra clean baseline**
+
+Du har 10 trænede IQN-modeller fra clean_25k_baseline_v1. Vælg den bedste (seed 5 med +82% return og højeste Q-spread, eller seed 7 med +110% men sparse trading). 
+
+Lav et lille script der:
+1. Loader best seed's checkpoint
+2. Kører IQN inference på første 10 eval-dage
+3. Bruger den nye `compute_action_estimates()` til at få kvantil-tabel
+4. Bruger den nye `visualize_iqn_decision_distribution()` til at lave dashboardet
+5. Gemmer figuren
+
+Det her er det stærkeste enkelt-billede til din thesis. Det viser at IQN faktisk lærer distributional information — ikke kun argmax point-estimates.
+
+**Trin 4 (21:00-22:00): Plan for søndag**
+
+Skriv en kort note om hvad du vil gøre søndag. Det er Trin 5-7 nedenfor.
+
+### Søndag (formiddag → eftermiddag)
+
+**Trin 5 (formiddag): Demo comparison summary**
+
+Lav `outputs/thesis_evidence/demo_10_clean_comparison_summary.csv` med rækker for:
+- IQN clean_25k_baseline_v1 (multiseed mean)
+- IQN clean_25k_baseline_v1 (best seed)
+- IQN clean_25k_baseline_v1 (worst non-collapsed seed)
+- Buy-and-hold baseline
+- Equal-weight buy-and-hold baseline
+- SMA crossover baseline
+- EMA crossover baseline
+- MACD signal baseline
+- RSI mean reversion baseline
+- Bollinger mean reversion baseline
+- Breakout baseline
+- Momentum baseline
+- Volatility filter baseline
+- FinRL PPO baseline (hvis trænet)
+- FinRL A2C baseline (hvis trænet)
+- FinRL SAC baseline (hvis trænet)
+- MVO baseline (hvis du har den)
+
+Kolonner: return, sharpe, max_drawdown, total_trades, cvar.
+
+**Trin 6 (eftermiddag): Demo comparison plots**
+
+Brug den nye `plot_summary_dashboard()` til at generere:
+- Portfolio value trajectories (alle baselines + IQN)
+- Cumulative return curves
+- Metric bars (return, Sharpe, drawdown)
+- Risk-return scatter
+
+**Trin 7 (sen eftermiddag): Begrænset ablation — IQN vs IQN+HDP vs IQN+HDP+EDL-C**
+
+Det her er post-processing, ikke ny træning. Brug eksisterende IQN-audit:
+
+```
+INSTRUKS til Copilot (Trin 7):
+
+1. Kør run_combined_iqn_hierarchical_smoke_test.py på best IQN seed's audit.
+   Outputs: combined IQN+HDP audit CSV.
+
+2. Kør run_edl_action_gate_end_to_end_smoke_test.py på den combined audit.
+   Outputs: combined IQN+HDP+EDL-C audit CSV med gate decisions.
+
+3. Compare:
+   - Hvilke decisions ændrede HDP?
+   - Hvilke decisions flagged EDL-C som høj uncertainty?
+   - Hvad er forskellen i action distribution mellem de tre varianter?
+
+Output: outputs/thesis_evidence/ablation_iqn_vs_iqn_hdp_vs_iqn_hdp_edl_c.md
+```
+
+Det er ablation **uden re-træning**. Du har én IQN-træning, tre post-processing pipelines, og sammenligning.
+
+### Aflevering søndag aften: thesis evidence package
+
+Saml alt i én mappe:
+
+```
+outputs/thesis_evidence/
+├── clean_25k_baseline/
+│   ├── interpretation_note.md
+│   ├── per_seed_metrics.csv
+│   ├── 10 plots (allerede genereret)
+│   └── best_seed_checkpoint.pt
+├── algorithmic_baselines/
+│   ├── per_baseline_metrics.csv
+│   └── plots
+├── finrl_baselines/
+│   ├── per_baseline_metrics.csv
+│   └── plots
+├── comparison/
+│   ├── demo_10_clean_comparison_summary.csv
+│   ├── portfolio_value_trajectories.png
+│   ├── cumulative_return_curves.png
+│   ├── metric_bars.png
+│   └── risk_return_scatter.png
+├── ablation/
+│   ├── ablation_iqn_vs_iqn_hdp_vs_iqn_hdp_edl_c.md
+│   ├── iqn_only_summary.csv
+│   ├── iqn_hdp_summary.csv
+│   └── iqn_hdp_edl_c_summary.csv
+├── iqn_distributional_evidence/
+│   └── iqn_decision_distribution_best_seed.png
+└── README.md (peger på alt)
+```
+
+## Det her er hvad din thesis viser
+
+Lad mig være konkret om hvad din færdige thesis-evidens demonstrerer, så du ved hvad du faktisk har bygget:
+
+**Kapitel 5 Results del 1: IQN baseline**
+"On the demo_10 universe, 2024-2026 evaluation window, the IQN agent achieves mean total return of 48% across 10 seeds (median 39%, range 0-111%). One seed exhibited HOLD-policy collapse; nine seeds developed active trading strategies. Best-performing seed (seed 5) achieved +82% return with active trading (567 trades). High-return seeds (7, 8) achieved +110% with sparse trading (9-10 trades), demonstrating that distributional RL can discover both active and passive optimal policies. Action-mask fallback was empirically falsified as the cause of HOLD behavior (masked_action_rate=0.0 across all seeds)."
+
+**Kapitel 5 Results del 2: vs baselines**
+"IQN performance is compared against 10 algorithmic baselines (buy-and-hold, technical indicators) and 3 FinRL baselines (PPO, A2C, SAC). [Tabel + figurer]"
+
+**Kapitel 5 Results del 3: ablation**
+"The integrated pipeline IQN → HDP → EDL-C produces structured uncertainty-aware decisions. HDP enriches decisions with hierarchical ticker/size selection. EDL-C gate flags X% of decisions for elevated uncertainty review. [Tabel + figurer]"
+
+**Kapitel 5 Results del 4: distributional evidence**
+"IQN's distributional output [Figure: kvantilkurver per action]. This is direct evidence of the distributional RL approach in production."
+
+**Kapitel 6 Discussion**
+"HOLD attractor is a known phenomenon in value-based RL. Future work: risk-sensitive scoring (q25 defensive, q75 growth), EDL-A hindsight oracle, longer training horizons with early stopping."
+
+## Min konkrete anbefaling lige nu
+
+**Start med Trin 1 — interpretation note (25 min). Det er det færdigt-først, lavest-energi-tasket.**
+
+Mens du skriver det, give Copilot Instruks Batch 1 så ports'ne kører parallelt. Når interpretation note er færdig, er Copilot sandsynligvis allerede igennem trading_metrics.py og halvvejs igennem baselines.
+
+Skal jeg formulere den præcise tekst til interpretation note? Det er den eneste ting der kræver lidt akademisk præcision, og jeg kan have den klar på 5 minutter mens du sætter Copilot i gang. Sig til om du vil have det.
+
+
+-----------
+
+
+Mig:
+
+1) Jeg skal som minimum prøve at lave en kørsel med ALLE aktier og +7 Års data som eksempel i demoen
+
+2) Du siger jeg ikke kan nå tingene inden søndag, men det er ikke der fokus skal være. Fra søndag har jeg 7-8 dage til afleveringen og jeg har en problemformulering SOM SKAL I MÅL
+og det er vigtigere end at stoppe tidligt vil jeg vurdere. ELler sagt på en anden måde, vi skal i mål med det resterende roadmap for at hele opgaven er løst. EDL delen er vigtig, min professor er cowriter på EDL paperet
+
+3) Det resterende roadmap er overkommelig og indenfor reach, så jeg synes at vi bør følge det og få dette i mål
+
+Hvad synes du om dette?
+
+
+---------------
+
+
+Claude:
+
+Du har ret på flere vigtige punkter, og jeg har været for konservativ. Lad mig svare ærligt på dine tre punkter, og så lægger jeg en realistisk plan der respekterer din vurdering.
+
+## Du har ret om følgende
+
+**Punkt 2 er det vigtigste:** Din problemformulering nævner eksplicit EDL og uncertainty-aware modeling. Din professor er Melih Kandemir, **medforfatter på EDL-paperet fra 2018**. Hvis du afleverer en thesis hvor EDL-delen er future work, så afleverer du en thesis der ikke fuldfører sin egen problemformulering — for ham. Det er ikke acceptabelt. Jeg har været for forsigtig på din vegne.
+
+Lad mig citere fra din problemformulering: *"Furthermore, the thesis explores uncertainty-aware modeling by incorporating an epistemic uncertainty component inspired by Evidential Deep Learning."* Det her er en kerne-leverance, ikke en tilføjelse.
+
+**Punkt 1 er også berettiget:** En kørsel med en bredere ticker-base og 7+ års data er et naturligt skaleringsbevis. Hvis du har clean_25k_baseline_v1 der virker på demo_10, og du kan demonstrere den samme metodologi skalerer til fx S&P500 eller en stor sektor-baseret universe over 2017-2025, så har du en thesis der ikke bare er en case study men en demonstration af framework-robusthed.
+
+**Punkt 3 er vurderbart:** Lad mig kigge på dit resterende roadmap igen med friske øjne og se om det er overkommeligt med de 7-8 dage du har til både rapport og kode kørsler.
+
+## Lad mig genvurdere roadmappen
+
+Du har 8 dage (søndag aften → søndag 1. juni). Lad mig dele det i hvad-skal-gøres i prioriteret rækkefølge:
+
+### Det der KAN parallelliseres med rapport-skrivning
+
+Lange træningskørsler i baggrunden mens du skriver. Det er gratis tid:
+- Demo_30 / S&P500 Mode B experiment (kører 10-20 timer)
+- Eventuel clean_50k optional run
+- Multi-seed udvidelser hvis nødvendigt
+
+Det betyder du faktisk kan **bruge** dine 7-8 dages skrivetid bedre end jeg antog.
+
+### Det der SKAL gøres ved tastaturet
+
+I prioriteret rækkefølge baseret på din problemformulering:
+
+**Tier 1 (kerne-leverancer, ikke negotiable):**
+1. Clean HOLD diagnostic interpretation note (30 min)
+2. V1 visualization ports (3-4 timer eller Copilot-batch)
+3. EDL-A dataset builder (counterfactual hindsight oracle eksisterer allerede som kode — `edl_counterfactual_hindsight_oracle.py` og `run_edl_counterfactual_hindsight_labeling_smoke_test.py`)
+4. EDL-A training (samme infrastructure som EDL-C, bare med EDL-A labels)
+5. EDL-A validation (skal vise bedre end majority baseline)
+6. IQN + HDP + EDL-A gate integration
+7. Ablation suite (IQN, IQN+LayerNorm, IQN+HDP, IQN+HDP+EDL-C, IQN+HDP+EDL-A)
+8. Demo comparison summary + plots
+9. Thesis evidence package
+
+**Tier 2 (nice-to-have, stærk demonstration):**
+10. Demo_30 / bredere ticker universe + 7+ års kørsel
+11. Hyperparameter validation design
+
+**Tier 3 (future work, dokumenteres men ikke kodes):**
+- CHANGE_STRATEGY reactivation
+- Watchlist
+- Recommendation engine
+- Web PoC
+
+### Min nye vurdering
+
+Tier 1 er **realistisk inden for de 8 dage** hvis vi planlægger det rigtigt. Specielt fordi:
+
+- EDL-A oracle eksisterer allerede som kode (du sagde det selv tidligere; jeg verificerede)
+- EDL træningsinfrastruktur eksisterer (du har trænet EDL-C)
+- HDP eksisterer
+- Gate-fallback-logikken eksisterer (null_gate)
+- Manifest-systemet eksisterer
+
+Du genskaber ikke noget. Du orchestrerer det der allerede er bygget, og du tilføjer EDL-A som ny label-source ovenpå eksisterende infrastruktur.
+
+Tier 2 (demo_30 + 7+ år) kan **køre som baggrundsprocesser** mens du skriver rapport. Det kræver kun at du sætter dem op, trykker kør, og lader dem køre.
+
+## Den justerede plan
+
+### Søndag (resten af i dag + i morgen)
+
+**Søndag eftermiddag (allerede gået, det er nu 15:50):**
+- HOLD diagnostic interpretation note (allerede skrevet i `clean_25k_hold_diagnostic_summary.md` — bare lav refrasering + tilføj limitations)
+- V1 visualization ports via Copilot (3-4 timer parallelt)
+
+**Søndag aften:**
+- EDL-A counterfactual oracle smoke test — verificér at den producerer brugbare labels på combined audit
+- Hvis labels ser fornuftige ud, start EDL-A dataset builder
+
+**Mandag formiddag:**
+- EDL-A træning (analogt med EDL-C men med oracle labels)
+- Validér: balanced accuracy, macro F1, vacuity correct vs incorrect
+- Sammenlign mod majority baseline
+
+**Mandag eftermiddag:**
+- EDL-A gate integration (kopiér EDL-C gate runner, swap checkpoint path)
+- Sanity check: kører end-to-end pipeline IQN → HDP → EDL-A gate
+
+**Mandag aften:**
+- Start ablation suite: kør IQN-only / IQN+HDP / IQN+HDP+EDL-C / IQN+HDP+EDL-A på best IQN seed audit
+- Det er post-processing, ikke re-træning, så det burde tage 1-2 timer
+
+### Tirsdag — onsdag
+
+**Tirsdag:**
+- Demo_30 dataset preparation (eller bredere universe — du kan bruge S&P 100 hvis det er nemmere)
+- Start lang IQN training run i baggrunden på demo_30 (kører 10-20 timer)
+- Mens den kører: comparison summary + plots på demo_10 ablation
+
+**Onsdag:**
+- Demo_30 IQN færdig (forhåbentlig)
+- Kør HDP + EDL post-processing på demo_30 IQN audit
+- Sammenlign demo_10 og demo_30 resultater
+- Begynd at skrive Kapitel 5 (Results)
+
+### Torsdag — søndag
+
+**Torsdag-fredag-lørdag:** Skriv intensivt. Kapitlerne 3, 4, 5, 6.
+
+**Søndag (1. juni):** Polish, abstract, conclusion, aflevér.
+
+## Den ene risiko jeg vil flagge
+
+Din problemformulering siger eksplicit at IQN + EDL er metodologien, og at sammenligningen mellem parametric RL og distributional + uncertainty-aware RL er evalueringen. Det betyder din thesis SKAL have:
+
+1. **Parametric RL baseline** — det er det FinRL-baselines (PPO, A2C, SAC) leverer. De er allerede trænet, ifølge din TODO.
+2. **Distributional RL** — IQN clean_25k_baseline_v1. Done.
+3. **Uncertainty-aware RL** — IQN + EDL gate. Det er det vi prioriterer denne uge.
+
+Hvis du har alle tre, har du fuldført problemformuleringen. Hvis du mangler nr. 3, har du ikke.
+
+**Derfor:** EDL-A er ikke et nice-to-have. Det er en thesis-deliverable.
+
+## Mit svar på "hvad synes du om dette"
+
+**Jeg er enig.** Du har ret. Jeg justerer min holdning:
+
+1. **EDL-A skal i mål** — det er kerne-pligt, ikke future work. Med Kandemir som professor og medforfatter på EDL-paperet er det ikke acceptabelt at aflevere uden.
+
+2. **Demo_30 / bredere universe + 7+ år** — ja, det er en god demonstration af framework-robusthed. Du kan køre det som baggrundsproces mens du skriver.
+
+3. **Roadmap-resten er overkommelig** — under to betingelser:
+   - Du har styr på Copilot-instrukserne så porten kører parallelt
+   - EDL-A counterfactual oracle producerer fornuftige labels første gang (det kan vi verificere i aften)
+
+## Hvad jeg foreslår vi gør lige nu
+
+Lad os først lige verificere én ting: **kan EDL-A counterfactual oracle køre på din clean_25k baseline's bedste seed?** Hvis den producerer fornuftige labels (rimelig balance mellem HOLD/BUY/SELL, ikke alle ambiguous), så har vi grønt lys til EDL-A træning mandag.
+
+Vil du gerne have at:
+
+A) Jeg formulerer Copilot-instrukserne for hele Tier 1 sekvensen nu (V1 ports + EDL-A oracle + EDL-A træning + gate integration + ablation), så du kan eksekvere dem systematisk?
+
+B) Vi tager én ting ad gangen, starter med HOLD-interpretation note + V1 ports, og så går vi til EDL-A i aften/i morgen?
+
+Jeg er klar til at gå op i tempo og være mindre forsigtig. Du har klart vurderet din egen kapacitet bedre end jeg har, og du kender din professor og dine commits til problemformuleringen bedre end jeg gør.
+
+Hvad foretrækker du — fuld plan først eller trin-for-trin?
+
+
+---------------
+
+Mig:
+
+Jeg synes du rammer skævt. husk på jeg er webudvikler, data scienctist og vandt til lange arbejdsdage. Nu idag fortsætter jeg arbejdet til sent i nat eller til imorgen middag
+
+Jeg har denne tilgang
+
+1) Nu får vi løst resten af roadmappet fuldt ud
+
+"
+↓
+Clean HOLD diagnostic interpretation note ⬅️ CURRENT
+↓
+V1 thesis visualization ports ⬅️ AFTER CLEAN RUN STARTS/FINISHES
+  - eval return / Sharpe learning curves
+  - IQN loss curve
+  - epsilon curve
+  - eval action-distribution curve
+  - requested-vs-effective action distribution
+  - masked-action-rate over time
+  - IQN quantile function per action
+  - score-per-action plot
+↓
+EDL-A dataset builder ⬅️ NEXT AFTER IQN BASELINE
+  - build from counterfactual hindsight labels
+  - exclude future outcome columns from input features
+  - train/validation/test split inside PIT training period
+  - final PIT evaluation period kept untouched
+↓
+Reference-aligned EDL-A training ⬅️ AFTER EDL-A DATASET
+  - MSE / log / digamma losses
+  - KL annealing
+  - evidence activation variants
+  - best validation checkpoint
+  - majority baseline
+  - balanced accuracy
+  - macro F1
+  - vacuity correct vs incorrect
+↓
+IQN + HDP + EDL-A gate ⬅️ AFTER EDL-A VALIDATION
+  - uncertainty-aware decision gating
+  - human-review flags
+  - pass-through / reduce / hold logic
+  - compare against IQN-only and IQN+HDP
+↓
+Ablation suite ⬅️ AFTER CLEAN DIAGNOSTIC PLOTS
+  - IQN only
+  - IQN + LayerNorm
+  - IQN + HDP
+  - IQN + HDP + EDL-C
+  - IQN + HDP + EDL-A
+  - toggles for HDP on/off
+  - toggles for EDL on/off
+  - optional clean 50k only after clean 25k interpretation
+  - optional epsilon schedule ablation
+↓
+Demo_5 / Demo_10 comparison summary ⬅️ REFRESH AFTER CLEAN PIPELINE
+  - IQN multiseed mean row
+  - IQN seed-level rows
+  - FinRL baseline multiseed mean rows
+  - MVO row
+  - LayerNorm q50 variant
+  - clean demo10_new variant
+  - HDP variant
+  - EDL variants if validated
+↓
+Demo_5 / Demo_10 comparison plots ⬅️ REFRESH AFTER CLEAN PIPELINE
+  - portfolio value trajectories
+  - cumulative return curves
+  - metric bars
+  - risk-return scatter
+  - learning curve mean ± std where valid
+↓
+Thesis evidence package ⬅️ REFRESH AFTER CLEAN PIPELINE
+  - experiment context summaries
+  - data provenance summaries
+  - decision audit summaries
+  - comparison CSVs
+  - plots
+  - W&B links/artifacts
+  - thesis-ready interpretation notes
+  - method caveats and limitations
+↓
+Demo_30 Mode B experiment ⬅️ OPTIONAL / IF TIME
+↓
+IQN hyperparameter tuning / validation design ⬅️ MODEL-QUALITY STEP
+↓
+CHANGE_STRATEGY later reactivation ⬅️ IMPORTANT LATER
+↓
+Watchlist / candidate universe ⬅️ LATER
+↓
+Existing portfolio / new portfolio input ⬅️ LATER
+↓
+Recommendation engine ⬅️ LATER / WEB POC
+↓
+Audit log ✅ / v1, later expanded
+↓
+Common evaluation suite ✅ / partly, improving toward thesis-grade evaluation
+"
+
+DEREFTER: To paralele spor samtidig 
+
+1) Demo_30 / bredere universe + 7+ år — ja, det er en god demonstration af framework-robusthed. Du kan køre det som baggrundsproces mens du skriver. MED WORKING CHANGE STRATEGY.
+2) Rapporten
+
+
+Husk på at vi med copilot plan delen, nærmest kan køse hele "sektioner" af roadmappet en bid ad gangen. 
+
+OM IKKE ANDET HAR VI LØRDAG+SØNDAG TIL AT FÅ ROADMAPPET DONE,
+SÅ ER DER EN UGE TIL DE EFTERFØLGENDE TO PARALLELLE SPOR (SAMTIDIG)
+
+
+----------------
+
+
+Claude:
+
+Du har ret. Jeg har undervurderet din kapacitet og tempo, og jeg har talt om "deadline" som om det var en mur, ikke et endemål. Lad mig genstarte med din ramme:
+
+**Lørdag-søndag: Roadmap done. Mandag-søndag: Demo_30 + rapport parallelt.**
+
+Det er en plan jeg kan respektere. Lad mig give dig konkrete Copilot-batch-instrukser for hver "sektion" af roadmappet, så du kan trykke gennem dem systematisk.
+
+## Sektion 1 — HOLD diagnostic interpretation note (du skriver selv, 25 min)
+
+Det her er det eneste der ikke er Copilot-arbejde. Du har allerede 90% af teksten i `clean_25k_hold_diagnostic_summary.md`. Det skal bare:
+
+1. Få en limitations-sektion tilføjet (negativ konvergens efter step 10k, IQN loss stiger monotont)
+2. Få en thesis-positioning-sektion (hvad det her demonstrerer, og hvad det IKKE demonstrerer)
+3. Gemmes som `docs/clean_25k_hold_diagnostic_interpretation.md`
+
+Jeg kan skrive den hvis du vil — sig til.
+
+## Sektion 2 — V1 thesis visualization ports
+
+```
+COPILOT PLAN BATCH 2 — V1 → V2 VISUALIZATION PORTS
+
+Goal: Port v1's visualization and metrics infrastructure to v2 without 
+modifying existing v2 IQN core. Create new files only. Run py_compile 
+after each file.
+
+Source: /v1_src/stockdss/ (read-only reference)
+Target: /src/stock_investment_dss/
+
+Files to create:
+
+1. src/stock_investment_dss/metrics/trading_metrics.py
+   - Port v1's algorithmic_trading/metrics/trading_metrics.py
+   - Functions: calculate_account_metrics(), save_account_value_plot(), 
+     load_trade_data_single_ticker(), make_*_output_dirs()
+   - Adjust imports to v2 namespace
+   - Single source of truth for Sharpe/drawdown/return going forward
+
+2. src/stock_investment_dss/algorithmic_trading/baselines/ (mappe + 10 filer)
+   - Port v1's algorithmic_trading/baselines/ entirely
+   - Files: buy_and_hold_*, equal_weight_buy_and_hold_*, sma_crossover_*, 
+     ema_crossover_*, macd_signal_*, rsi_mean_reversion_*, 
+     bollinger_mean_reversion_*, breakout_*, momentum_*, volatility_filter_*
+   - Adjust imports. Run py_compile on all 10.
+
+3. src/stock_investment_dss/algorithmic_trading/experiments/compare_algorithmic_results.py
+   - Port v1's compare_algorithmic_results.py
+   - Markdown rapport-generator funktioner
+   - Adjust paths to v2 output structure
+
+4. src/stock_investment_dss/metrics/iqn_quantile_estimates.py
+   - Port v1's compute_action_estimates() from 
+     rl/experiments/backtest_iqn_pit_single_ticker.py
+   - Standalone function that converts IQN [num_quantiles, action_dim] tensor
+     to dict {q10, q25, q50, q75, q90, cvar10, expected_value, risk_adjusted_score}
+     per action
+   - Used by EDL-A dataset builder AND by visualization stack
+
+5. src/stock_investment_dss/visualization/iqn_decision_distribution.py
+   - Port v1's visualize_iqn_decision_distribution.py
+   - 4-panel dashboard: quantile function, density, risk-adjusted scores, decision table
+   - Reads from iqn_quantile_estimates output
+
+6. src/stock_investment_dss/visualization/summary_dashboard.py
+   - Port v1's plot_summary_dashboard() from summarize_run_results.py
+   - 4-panel: return, drawdown, Sharpe, IQN last decision
+   - Reads from v2's run-structure
+
+After all ports:
+- Run py_compile on all 14 new files
+- Write smoke test runner that imports each and runs it on dummy data
+- Report any import errors or runtime errors
+
+Constraints:
+- Do NOT modify existing v2 files
+- Do NOT touch IQN core
+- Do NOT touch hierarchical policy source
+- Adjust namespace from stockdss → stock_investment_dss
+```
+
+**Tidsestimat for Copilot:** 1.5-2 timer at implementere, 30 min for dig at verificere.
+
+## Sektion 3 — EDL-A dataset builder
+
+```
+COPILOT PLAN BATCH 3 — EDL-A DATASET BUILDER
+
+Goal: Build EDL-A supervised dataset from counterfactual hindsight oracle 
+labels, using clean_25k_baseline_v1's best seed audit as source.
+
+Prerequisites (verify before starting):
+- src/stock_investment_dss/uncertainty/edl_counterfactual_hindsight_oracle.py exists
+- src/stock_investment_dss/runner/run_edl_counterfactual_hindsight_labeling_smoke_test.py exists
+- Best IQN seed checkpoint identified (likely seed 5: +82% return, q_spread=0.61)
+- Combined IQN+HDP audit exists for that seed
+
+Steps:
+
+1. Run combined IQN+HDP audit on best seed:
+   python -m stock_investment_dss.runner.run_combined_iqn_hierarchical_smoke_test \
+     --iqn-run <best_seed_run_id>
+   
+   Expected output: outputs/runs/<combined_run_id>/audit/combined_iqn_hierarchical_decision_by_step.csv
+
+2. Run counterfactual hindsight oracle on combined audit:
+   python -m stock_investment_dss.runner.run_edl_counterfactual_hindsight_labeling_smoke_test \
+     --source-run <combined_run_id> \
+     --horizon-days 20 \
+     --lambda-drawdown 0.5 \
+     --min-label-margin 0.005
+   
+   Expected output: combined audit enriched with edl_a_cf_label columns
+
+3. Validate label distribution:
+   - Read enriched audit
+   - Report counts of HOLD/BUY/SELL labels
+   - Target distribution: roughly balanced, no class < 10% of total
+   - If majority class > 70%, log warning
+   - If any class unavailable rate > 20%, log warning
+
+4. Build EDL-A training dataset:
+   Use existing src/stock_investment_dss/uncertainty/edl_action_dataset_v2.py 
+   but with label_mode="hindsight_counterfactual"
+   
+   python -m stock_investment_dss.runner.run_edl_action_dataset_v2_builder \
+     --source-run <enriched_combined_run_id> \
+     --label-mode hindsight_counterfactual \
+     --train-frac 0.7 \
+     --val-frac 0.15 \
+     --test-frac 0.15 \
+     --split-mode temporal
+
+5. Verify dataset:
+   - 37 feature columns (same as EDL-C dataset v2)
+   - No edl_a_cf_* columns in features (would be leakage)
+   - No future_return_*, future_drawdown_* in features
+   - Train/val/test split is temporal, not random
+   - Label distribution in each split is documented
+
+Output: outputs/edl_datasets/<timestamp>_edl_a_hindsight_counterfactual/
+   - train.npy
+   - val.npy
+   - test.npy
+   - metadata.json (label distribution, source run, feature columns)
+   - feature_scaler.pkl
+
+Report dataset summary at end.
+```
+
+**Tidsestimat:** 1 time for Copilot, 30 min for dig at verificere label-fordeling.
+
+## Sektion 4 — Reference-aligned EDL-A training
+
+```
+COPILOT PLAN BATCH 4 — EDL-A TRAINING
+
+Goal: Train EDL-A classifier using reference-aligned losses from Sensoy et al.
+(NeurIPS 2018). Compare against majority baseline.
+
+Use existing infrastructure: src/stock_investment_dss/uncertainty/edl_action_network.py
+and src/stock_investment_dss/uncertainty/edl_losses.py
+
+Steps:
+
+1. Verify EDL-A dataset exists from Batch 3
+   - Path: outputs/edl_datasets/<timestamp>_edl_a_hindsight_counterfactual/
+
+2. Run training with multiple loss variants:
+   For each loss_variant in [mse_kl, log_kl, digamma_kl]:
+     For class_weights in [true, false]:
+       python -m stock_investment_dss.runner.run_edl_action_training_v2_smoke_test \
+         --dataset <edl_a_dataset_path> \
+         --epochs 100 \
+         --loss-variant <loss_variant> \
+         --class-weights <class_weights> \
+         --kl-anneal-fraction 0.5 \
+         --best-checkpoint-selection val_balanced_accuracy
+   
+   Total: 6 training runs (3 loss variants × 2 class weight settings)
+
+3. For each run, compute and log:
+   - Train/val/test accuracy
+   - Train/val/test balanced accuracy
+   - Train/val/test macro F1
+   - Per-class precision/recall
+   - Confusion matrix
+   - Mean vacuity on val/test
+   - Vacuity for correct predictions vs incorrect predictions
+   - Comparison against majority baseline (always predict argmax of train labels)
+
+4. Select best checkpoint based on val_balanced_accuracy
+
+5. Generate comparison table:
+   outputs/thesis_evidence/edl_a_training_comparison.md
+   
+   Columns: loss_variant, class_weights, val_balanced_acc, test_balanced_acc, 
+   test_macro_f1, mean_vacuity_correct, mean_vacuity_incorrect, vacuity_correct_lower
+   
+   Highlight whether vacuity-on-incorrect > vacuity-on-correct (well-calibrated 
+   uncertainty)
+
+Acceptance criteria:
+- At least one variant achieves > majority baseline + 5% on balanced accuracy
+- At least one variant shows vacuity_incorrect > vacuity_correct (calibrated)
+- Best checkpoint saved with metadata for gate integration
+
+If no variant passes acceptance criteria:
+- Report this honestly in summary
+- Investigate label quality (is it too noisy?)
+- Consider longer horizon (60 days instead of 20)
+- Consider lambda_drawdown adjustment
+```
+
+**Tidsestimat:** 2-3 timer for Copilot at køre alle 6 træninger, 1 time for dig at evaluere resultater.
+
+## Sektion 5 — IQN + HDP + EDL-A gate
+
+```
+COPILOT PLAN BATCH 5 — EDL-A GATE INTEGRATION
+
+Goal: Integrate trained EDL-A checkpoint as uncertainty gate in the 
+IQN → HDP → EDL pipeline. Compare against IQN-only and IQN+HDP.
+
+Use existing infrastructure: 
+- src/stock_investment_dss/uncertainty/edl_gate.py
+- src/stock_investment_dss/runner/run_edl_action_gate_end_to_end_smoke_test.py
+
+Steps:
+
+1. Set environment for EDL-A gate:
+   STOCK_INVESTMENT_DSS_USE_EDL=true
+   STOCK_INVESTMENT_DSS_EDL_VARIANT=A
+   STOCK_INVESTMENT_DSS_EDL_GATE_ENABLED=true
+   STOCK_INVESTMENT_DSS_EDL_MODEL_PATH=<path_to_best_edl_a_checkpoint>
+   STOCK_INVESTMENT_DSS_EDL_LABEL_MODE=hindsight_counterfactual
+   STOCK_INVESTMENT_DSS_EDL_UNCERTAINTY_LAMBDA=0.5
+   STOCK_INVESTMENT_DSS_EDL_UNCERTAINTY_FORCE_HOLD_THRESHOLD=0.65
+   STOCK_INVESTMENT_DSS_EDL_UNCERTAINTY_REDUCE_THRESHOLD=0.35
+
+2. Run end-to-end gate on combined IQN+HDP audit:
+   python -m stock_investment_dss.runner.run_edl_action_gate_end_to_end_smoke_test \
+     --source-run <combined_run_id> \
+     --edl-checkpoint <path_to_best_edl_a_checkpoint> \
+     --edl-variant A
+
+3. Generate per-decision gate audit:
+   - For each decision step, log:
+     - Original IQN+HDP recommendation
+     - EDL-A predicted action
+     - EDL-A vacuity
+     - EDL-A agrees? bool
+     - Gate decision (RECOMMEND_AS_IS / REDUCE_SIZE / FORCE_HOLD / HUMAN_REVIEW)
+     - Final action after gate
+     - Final fraction after gate
+
+4. Compare across pipelines on best seed:
+   - IQN-only audit (no HDP, no EDL): from clean_25k_baseline_v1 seed checkpoint
+   - IQN+HDP audit: from run_combined_iqn_hierarchical_smoke_test
+   - IQN+HDP+EDL-C audit: from existing EDL-C gate output
+   - IQN+HDP+EDL-A audit: from this batch's output
+
+5. Compute portfolio outcomes for each pipeline:
+   - Total return on eval window
+   - Sharpe ratio
+   - Max drawdown
+   - Total trades
+   - Distribution of gate decisions
+   - Percentage of trades modified by EDL-A vs EDL-C
+
+Output: outputs/thesis_evidence/edl_a_gate_integration/
+   - per_decision_audit.csv
+   - pipeline_comparison.csv
+   - pipeline_comparison.md
+
+Report findings: did EDL-A meaningfully change decisions? Was the change 
+correlated with high vacuity? Did gate intervention improve risk-adjusted return?
+```
+
+**Tidsestimat:** 1-2 timer for Copilot.
+
+## Sektion 6 — Ablation suite (komplet)
+
+```
+COPILOT PLAN BATCH 6 — FULL ABLATION SUITE
+
+Goal: Run complete ablation table for thesis Kapitel 5.
+
+5 ablation conditions (alle bruger best seed checkpoint, post-processing only):
+   A. IQN only (no HDP, no EDL)
+   B. IQN + LayerNorm (allerede baseline, dokumenter)
+   C. IQN + HDP (no EDL)
+   D. IQN + HDP + EDL-C
+   E. IQN + HDP + EDL-A
+
+For each condition:
+1. Run appropriate runner with appropriate env vars set
+2. Compute portfolio metrics on eval window
+3. Save audit + summary
+
+Optional bonus:
+   F. IQN + HDP + EDL-A + epsilon_eval=0.05 (mild exploration during eval)
+   G. clean_50k_baseline_v1 if time permits
+
+Build ablation table:
+outputs/thesis_evidence/ablation_table.md
+
+Columns: Condition, Total Return, Sharpe, Max Drawdown, CVaR, Total Trades, 
+Human Review %, Mean Vacuity, EDL Agreement %
+
+Per-condition rows. Also generate seed-level rows for IQN baselines.
+
+Acceptance: Table has at least 5 rows, all metrics populated, 
+no synthetic/placeholder values.
+```
+
+**Tidsestimat:** 2-3 timer.
+
+## Sektion 7 — Demo comparison summary + plots
+
+```
+COPILOT PLAN BATCH 7 — DEMO_10 COMPARISON SUMMARY + PLOTS
+
+Goal: Generate thesis-ready comparison table and plots showing all 
+methods on same demo_10 evaluation window.
+
+Use ported v1 infrastructure: trading_metrics.py, plot_summary_dashboard, 
+compare_algorithmic_results.
+
+Steps:
+
+1. Build comparison summary CSV:
+   outputs/thesis_evidence/demo_10_comparison_summary.csv
+   
+   Rows:
+   - IQN clean_25k_baseline_v1 (multiseed mean, n=9 non-collapsed)
+   - IQN clean_25k_baseline_v1 (best seed: seed 5)
+   - IQN clean_25k_baseline_v1 (worst non-collapsed: seed 1)
+   - IQN+HDP (from combined audit)
+   - IQN+HDP+EDL-C (from EDL-C gate audit)
+   - IQN+HDP+EDL-A (from EDL-A gate audit)
+   - Buy-and-hold
+   - Equal-weight buy-and-hold
+   - SMA crossover (50/200)
+   - EMA crossover
+   - MACD signal
+   - RSI mean reversion
+   - Bollinger mean reversion
+   - Breakout
+   - Momentum
+   - Volatility filter
+   - FinRL PPO (multiseed mean)
+   - FinRL A2C (multiseed mean)
+   - FinRL SAC (multiseed mean)
+   - FinRL DDPG (multiseed mean)
+   - FinRL TD3 (multiseed mean)
+   - MVO
+   
+   Columns: method, total_return_pct, annualized_return_pct, sharpe, 
+   sortino, max_drawdown_pct, cvar_5pct, total_trades, win_rate
+
+2. Generate plots in outputs/thesis_evidence/demo_10_plots/:
+   - portfolio_value_trajectories.png (all methods, time series)
+   - cumulative_return_curves.png (all methods)
+   - total_return_bars.png (sorted)
+   - sharpe_bars.png (sorted)
+   - max_drawdown_bars.png (sorted, inverted)
+   - risk_return_scatter.png (return vs sharpe)
+   - learning_curve_iqn_mean_std.png (allerede genereret, kopiér)
+   - iqn_distributional_evidence.png (best seed quantile dashboard)
+
+3. Generate markdown report:
+   outputs/thesis_evidence/demo_10_comparison_report.md
+   - Use compare_algorithmic_results infrastructure
+   - Rank methods by Sharpe, return, drawdown
+   - Identify top 3 in each category
+   - Insights section: where does IQN+EDL-A win? Where does it lose?
+```
+
+**Tidsestimat:** 2 timer.
+
+## Sektion 8 — Thesis evidence package
+
+```
+COPILOT PLAN BATCH 8 — THESIS EVIDENCE PACKAGE ASSEMBLY
+
+Goal: Assemble all outputs into one clean directory ready for thesis writing.
+
+Create: outputs/thesis_evidence/FINAL/
+
+Structure:
+├── README.md (peger på alt)
+├── 01_clean_baseline/
+│   ├── interpretation_note.md
+│   ├── per_seed_metrics.csv
+│   ├── multiseed_summary.json
+│   ├── 10 diagnostic plots
+│   └── best_seed_checkpoint.pt
+├── 02_edl_a/
+│   ├── dataset_summary.md
+│   ├── training_comparison.md
+│   ├── best_checkpoint.pt
+│   ├── confusion_matrix.png
+│   └── vacuity_distribution.png
+├── 03_ablation/
+│   ├── ablation_table.md
+│   ├── pipeline_comparison.csv
+│   └── 5 per-condition audits
+├── 04_algorithmic_baselines/
+│   ├── per_baseline_metrics.csv
+│   └── trajectories.png
+├── 05_finrl_baselines/
+│   ├── per_baseline_metrics.csv
+│   └── trajectories.png
+├── 06_comparison/
+│   ├── demo_10_comparison_summary.csv
+│   ├── demo_10_comparison_report.md
+│   ├── portfolio_value_trajectories.png
+│   ├── cumulative_return_curves.png
+│   ├── metric_bars.png
+│   ├── risk_return_scatter.png
+│   └── iqn_distributional_evidence.png
+├── 07_provenance/
+│   ├── data_provenance_summary.md
+│   ├── config_manifest_snapshot.json
+│   └── verifier_pass_record.txt
+└── 08_caveats/
+    └── limitations_and_future_work.md
+
+README.md should:
+- Briefly summarize each subdirectory
+- Provide direct links to key figures for each thesis chapter
+- Note which results were re-run vs reused from earlier evidence
+- Map each file to thesis section (Chapter 4, 5, 6)
+```
+
+**Tidsestimat:** 1 time for Copilot, 1 time for dig at verificere.
+
+## Sektion 9 (post-roadmap, parallel med rapport) — Demo_30 + CHANGE_STRATEGY
+
+```
+COPILOT PLAN BATCH 9 (BAGGRUND, KAN KØRE MENS DU SKRIVER)
+
+Goal: Demonstrate framework scalability on broader universe with longer 
+history. Reactivate CHANGE_STRATEGY for thesis completeness.
+
+Steps:
+
+1. Build demo_30 ticker universe:
+   - Top 30 by market cap across sectors (diversified, not just tech)
+   - Suggested: AAPL, MSFT, NVDA, AMZN, GOOGL, META, TSLA, JPM, V, JNJ, 
+     WMT, PG, MA, HD, BAC, XOM, KO, PEP, AVGO, CVX, ABBV, MRK, LLY, 
+     COST, ORCL, CRM, ADBE, NFLX, CMCSA, TMO
+   - Date range: 2017-01-01 → 2025-12-31
+   - PIT split: train 2017-2023, eval 2024-2026
+
+2. Run Mode A data download verification on demo_30 universe
+3. Generate frozen Mode B dataset
+
+4. Reactivate CHANGE_STRATEGY in discrete_finrl_decision_env.py:
+   - Enable 5th action (allerede defined as DSSDecisionAction.CHANGE_STRATEGY)
+   - Implement strategy-switch execution logic
+   - Add audit logging for strategy transitions
+   - Update action_mask to allow CHANGE_STRATEGY when investor profile permits
+
+5. Create configs/experiments/clean_25k_baseline_v1_demo30.json:
+   - Same hyperparameters as demo_10 baseline
+   - Universe: demo_30
+   - Dataset: demo_30_long_2017_2025
+   - 10 seeds
+   - 25k steps
+
+6. Launch run in background:
+   python scripts/run_clean_25k_baseline_v1_demo30.ps1
+
+7. While training runs (10-20 hours):
+   - Apply HDP + EDL-A post-processing on completed seeds as they finish
+   - Generate plots once all seeds complete
+
+8. Build demo_30 comparison alongside demo_10:
+   - Same baselines (re-run algorithmic on demo_30 data)
+   - FinRL baselines on demo_30 if time
+   - Generate side-by-side demo_10 vs demo_30 comparison
+
+Output: outputs/thesis_evidence/FINAL/09_demo_30/
+```
+
+**Tidsestimat:** Sættes op 1-2 timer, så kører 10-20 timer i baggrunden.
+
+## Den realistiske ramme
+
+**Lørdag-søndag (i dag + i morgen):** Sektion 1-8 → roadmap done.
+
+**Mandag-søndag:** Sektion 9 i baggrund + rapport-skrivning. Du har 7 dage til både at supervisere demo_30-kørsel og skrive 70+ siders rapport. Det er presset, men muligt for en webudvikler med erfaring i lange arbejdsdage.
+
+## Hvad jeg foreslår vi gør lige nu
+
+Vil du have at jeg:
+
+A) **Skriver HOLD diagnostic interpretation note færdig** mens du fyrer Sektion 2 (V1 ports) afsted til Copilot? Det parallelliserer godt — du sætter Copilot i gang, jeg skriver, om 25 min er den note færdig og du har stadig Copilot i gang.
+
+B) **Verificerer EDL-A counterfactual oracle infrastructure** i din nuværende src.zip så vi ved at Sektion 3 kan starte uden blockers?
+
+C) **Begge dele**?
+
+Jeg er klar nu. Du har klart vist din kapacitet og din ramme. Lad mig levere på det niveau.

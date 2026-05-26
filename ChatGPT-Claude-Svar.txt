@@ -1,0 +1,1928 @@
+Svaret fra Copilot på etape 3 planen:
+
+Updated todo list
+
+Searched for files matching `external/ObjectRL_style/src/stockdss/algorithmic_trading/baselines/*.py`, 11 results
+
+Searched for files matching `src/stock_investment_dss/algorithmic_trading/**/*`.
+
+Searched for files matching `data/market/daily/imports/*`, 2 results
+
+All 10 files found. No V2 algorithmic_trading dir exists. Data file confirmed. Now reading all 10 baseline files in parallel:
+
+Read [](file:///c%3A/Users/gurug/Dropbox/DataScience/Speciale/D-IQN-DSS/FinRL_IQN/external/ObjectRL_style/src/stockdss/algorithmic_trading/baselines/buy_and_hold_pit_single_ticker.py)
+
+Read [](file:///c%3A/Users/gurug/Dropbox/DataScience/Speciale/D-IQN-DSS/FinRL_IQN/external/ObjectRL_style/src/stockdss/algorithmic_trading/baselines/ema_crossover_pit_single_ticker.py)
+
+Read [](file:///c%3A/Users/gurug/Dropbox/DataScience/Speciale/D-IQN-DSS/FinRL_IQN/external/ObjectRL_style/src/stockdss/algorithmic_trading/baselines/macd_signal_pit_single_ticker.py)
+
+Read [](file:///c%3A/Users/gurug/Dropbox/DataScience/Speciale/D-IQN-DSS/FinRL_IQN/external/ObjectRL_style/src/stockdss/algorithmic_trading/baselines/sma_crossover_pit_single_ticker.py)
+
+Read [](file:///c%3A/Users/gurug/Dropbox/DataScience/Speciale/D-IQN-DSS/FinRL_IQN/external/ObjectRL_style/src/stockdss/algorithmic_trading/baselines/rsi_mean_reversion_pit_single_ticker.py)
+
+Read [](file:///c%3A/Users/gurug/Dropbox/DataScience/Speciale/D-IQN-DSS/FinRL_IQN/external/ObjectRL_style/src/stockdss/algorithmic_trading/baselines/bollinger_mean_reversion_pit_single_ticker.py)
+
+Read [](file:///c%3A/Users/gurug/Dropbox/DataScience/Speciale/D-IQN-DSS/FinRL_IQN/external/ObjectRL_style/src/stockdss/algorithmic_trading/baselines/volatility_filter_pit_single_ticker.py)
+
+Read [](file:///c%3A/Users/gurug/Dropbox/DataScience/Speciale/D-IQN-DSS/FinRL_IQN/external/ObjectRL_style/src/stockdss/algorithmic_trading/baselines/breakout_pit_single_ticker.py)
+
+Read [](file:///c%3A/Users/gurug/Dropbox/DataScience/Speciale/D-IQN-DSS/FinRL_IQN/external/ObjectRL_style/src/stockdss/algorithmic_trading/baselines/equal_weight_buy_and_hold_pit_portfolio.py)
+
+Read [](file:///c%3A/Users/gurug/Dropbox/DataScience/Speciale/D-IQN-DSS/FinRL_IQN/external/ObjectRL_style/src/stockdss/algorithmic_trading/baselines/momentum_pit_single_ticker.py)
+
+Now check the demo_10_new data file columns and tickers:
+
+Used tool: pylance mcp server, pylanceRunCodeSnippet (MCP Server)
+Completed with input: {
+  "codeSnippet": "\nimport pandas as pd\npath = r\"C:\\Users\\gurug\\Dropbox\\DataScience\\Speciale\\D-IQN-DSS\\FinRL_IQN\\data\\market\\daily\\imports\\market_data_demo10_new_2010_2026.csv\"\ndf = pd.read_csv(path, nrows=5)\nprint(\"Columns:\", list(df.columns))\nprint(\"Shape preview:\", df.shape)\nprint(df.head(3).to_string())\n\n# get full ticker list\nfull = pd.read_csv(path, usecols=[\"tic\"] if \"tic\" in pd.read_csv(path, nrows=1).columns else [\"ticker\"])\ncol = \"tic\" if \"tic\" in full.columns else \"ticker\"\ntickers = sorted(full[col].unique().tolist())\nprint(\"\\nTicker column name:\", col)\nprint(\"Tickers:\", tickers)\nprint(\"Row count:\", len(full))\n",
+  "workspaceRoot": "file:///c%3A/Users/gurug/Dropbox/DataScience/Speciale/D-IQN-DSS/FinRL_IQN"
+}
+
+
+
+Now I have everything. Let me read the V1 `__init__.py` and the Etape 2 metrics module (for reference in the plan):
+
+Read [](file:///c%3A/Users/gurug/Dropbox/DataScience/Speciale/D-IQN-DSS/FinRL_IQN/src/stock_investment_dss/metrics/trading_metrics.py#1-61), lines 1 to 60
+
+Read [](file:///c%3A/Users/gurug/Dropbox/DataScience/Speciale/D-IQN-DSS/FinRL_IQN/external/ObjectRL_style/src/stockdss/algorithmic_trading/baselines/__init__.py)
+
+Now I have everything needed. Writing the plan:
+
+Read [](file:///c%3A/Users/gurug/.copilot/session-state/b9e47002-a524-4bb5-a262-dd42efa5b389/plan.md#1-6), lines 1 to 5
+
+Insert Etape 3 todos
+
+Created 89 todos
+
+Exited plan mode
+
+Asked you to review the plan
+
+The plan was presented but you clicked "Suggest changes" without providing specific feedback. What would you like to change or clarify about the Etape 3 plan?
+
+The plan was presented but you clicked "Suggest changes" without providing specific feedback. What would you like to change or clarify about the Etape 3 plan?
+
+Read [](file:///c%3A/Users/gurug/.copilot/session-state/b9e47002-a524-4bb5-a262-dd42efa5b389/plan.md#1-51), lines 1 to 50
+
+Read [](file:///c%3A/Users/gurug/.copilot/session-state/b9e47002-a524-4bb5-a262-dd42efa5b389/plan.md#126-231), lines 126 to 230
+
+Now I have enough context to update the plan. Let me edit the relevant sections:Now update section 5 to reflect the revised imports (no dir helpers):Now update the §6 substep 3a section to match the resolved path convention:
+
+Read [](file:///c%3A/Users/gurug/.copilot/session-state/b9e47002-a524-4bb5-a262-dd42efa5b389/plan.md#244-341), lines 244 to 340
+
+Now update 3b, 3c, 3d to note path construction pattern and update volatility_filter section:
+
+Read [](file:///c%3A/Users/gurug/.copilot/session-state/b9e47002-a524-4bb5-a262-dd42efa5b389/plan.md#348-396), lines 348 to 395
+
+Now present the updated plan for approval:
+
+Exited plan mode
+
+Asked you to review the plan
+
+Plan approved. Now implementing 3a — starting with the package markers and `buy_and_hold`:
+
+Mark pkg and 3a todos in_progress
+
+Read [](file:///c%3A/Users/gurug/Dropbox/DataScience/Speciale/D-IQN-DSS/FinRL_IQN/external/ObjectRL_style/src/stockdss/algorithmic_trading/baselines/buy_and_hold_pit_single_ticker.py)
+
+Read [](file:///c%3A/Users/gurug/Dropbox/DataScience/Speciale/D-IQN-DSS/FinRL_IQN/external/ObjectRL_style/src/stockdss/algorithmic_trading/baselines/equal_weight_buy_and_hold_pit_portfolio.py)
+
+Starting: *Create package markers for algorithmic_trading* (74/89)
+
+Now let me create the V2 files:
+
+Ran terminal command: New-Item -ItemType Directory -Force "c:\Users\gurug\Dropbox\DataScience\Speciale\D-IQN-DSS\FinRL_IQN\src\stock_investment_dss\algorithmic_trading\baselines" | Out-Null; Write-Host "Dirs created"
+
+Ran terminal command: New-Item -ItemType Directory -Force "c:\Users\gurug\Dropbox\DataScience\Speciale\D-IQN-DSS\FinRL_IQN\src\stock_investment_dss\algorithmic_trading\baselines" | Out-Null; Write-Host "Dirs created"
+
+
+````
+
+````
+
+````
+
+````
+
+
+Mark pkg done
+
+Completed: *Create package markers for algorithmic_trading* (74/89)
+
+
+````
+
+````
+Now create the equal-weight portfolio baseline:
+````
+
+````
+Now validate both files and run the smoke test:
+
+Ran terminal command: cd "c:\Users\gurug\Dropbox\DataScience\Speciale\D-IQN-DSS\FinRL_IQN"
+$env:PYTHONPATH = "src"
+python -m py_compile src/stock_investment_dss/algorithmic_trading/__init__.py ; Write-Host "OK: __init__"
+python -m py_compile src/stock_investment_dss/algorithmic_trading/baselines/__init__.py ; Write-Host "OK: baselines/__init__"
+python -m py_compile src/stock_investment_dss/algorithmic_trading/baselines/buy_and_hold_pit_single_ticker.py ; Write-Host "OK: buy_and_hold"
+python -m py_compile src/stock_investment_dss/algorithmic_trading/baselines/equal_weight_buy_and_hold_pit_portfolio.py ; Write-Host "OK: equal_weight"
+
+Ran terminal command: cd "c:\Users\gurug\Dropbox\DataScience\Speciale\D-IQN-DSS\FinRL_IQN"
+$env:PYTHONPATH = "src"
+python -m py_compile src/stock_investment_dss/algorithmic_trading/__init__.py && Write-Host "OK: __init__"
+python -m py_compile src/stock_investment_dss/algorithmic_trading/baselines/__init__.py && Write-Host "OK: baselines/__init__"
+python -m py_compile src/stock_investment_dss/algorithmic_trading/baselines/buy_and_hold_pit_single_ticker.py && Write-Host "OK: buy_and_hold"
+python -m py_compile src/stock_investment_dss/algorithmic_trading/baselines/equal_weight_buy_and_hold_pit_portfolio.py && Write-Host "OK: equal_weight"
+
+All compile clean. Now run the smoke test:
+
+Ran terminal command: cd "c:\Users\gurug\Dropbox\DataScience\Speciale\D-IQN-DSS\FinRL_IQN"
+$env:PYTHONPATH = "src"
+python - << 'EOF'
+from stock_investment_dss.algorithmic_trading.baselines.buy_and_hold_pit_single_ticker import run_buy_and_hold
+
+result = run_buy_and_hold(
+    trade_data="data/market/daily/imports/market_data_demo10_new_2010_2026.csv",
+    ticker="KO",
+    dataset_tag="demo_10_new",
+    initial_amount=1_000_000.0,
+)
+print("Output files:")
+for k, p in result.items():
+    exists = p.exists()
+    size = p.stat().st_size if exists else 0
+    print(f"  {k}: {p.name}  exists={exists}  size={size}")
+
+import pandas as pd
+metrics = pd.read_csv(result["metrics"])
+print("\nMetrics:")
+print(metrics[["strategy","total_return_pct","max_drawdown_pct","annualized_sharpe","days"]].to_string(index=False))
+
+assert result["account"].exists(), "account CSV missing"
+assert result["metrics"].exists(), "metrics CSV missing"
+assert result["config"].exists(), "config JSON missing"
+assert result["plot"].exists(), "plot PNG missing"
+
+tr = float(metrics["total_return_pct"].iloc[0])
+dd = float(metrics["max_drawdown_pct"].iloc[0])
+days = int(metrics["days"].iloc[0])
+assert -200 < tr < 10000, f"total_return_pct out of range: {tr}"
+assert -100 <= dd <= 0, f"max_drawdown_pct out of range: {dd}"
+assert days > 1000, f"days unexpectedly small: {days}"
+
+text_check = result["account"].read_text()
+assert "stockdss" not in text_check
+import json
+cfg = json.loads(result["config"].read_text())
+assert "stockdss" not in str(cfg)
+
+print("\nAll assertions passed.")
+EOF
+
+Ran terminal command: cd "c:\Users\gurug\Dropbox\DataScience\Speciale\D-IQN-DSS\FinRL_IQN"
+$env:PYTHONPATH = "src"
+python - << 'EOF'
+from stock_investment_dss.algorithmic_trading.baselines.buy_and_hold_pit_single_ticker import run_buy_and_hold
+
+result = run_buy_and_hold(
+    trade_data="data/market/daily/imports/market_data_demo10_new_2010_2026.csv",
+    ticker="KO",
+    dataset_tag="demo_10_new",
+    initial_amount=1_000_000.0,
+)
+print("Output files:")
+for k, p in result.items():
+    exists = p.exists()
+    size = p.stat().st_size if exists else 0
+    print(f"  {k}: {p.name}  exists={exists}  size={size}")
+
+import pandas as pd
+metrics = pd.read_csv(result["metrics"])
+print("\nMetrics:")
+print(metrics[["strategy","total_return_pct","max_drawdown_pct","annualized_sharpe","days"]].to_string(index=False))
+
+assert result["account"].exists(), "account CSV missing"
+assert result["metrics"].exists(), "metrics CSV missing"
+assert result["config"].exists(), "config JSON missing"
+assert result["plot"].exists(), "plot PNG missing"
+
+tr = float(metrics["total_return_pct"].iloc[0])
+dd = float(metrics["max_drawdown_pct"].iloc[0])
+days = int(metrics["days"].iloc[0])
+assert -200 < tr < 10000, f"total_return_pct out of range: {tr}"
+assert -100 <= dd <= 0, f"max_drawdown_pct out of range: {dd}"
+assert days > 1000, f"days unexpectedly small: {days}"
+
+text_check = result["account"].read_text()
+assert "stockdss" not in text_check
+import json
+cfg = json.loads(result["config"].read_text())
+assert "stockdss" not in str(cfg)
+
+print("\nAll assertions passed.")
+EOF
+
+Used tool: pylance mcp server, pylanceRunCodeSnippet (MCP Server)
+Completed with input: {
+  "workspaceRoot": "file:///c:/Users/gurug/Dropbox/DataScience/Speciale/D-IQN-DSS/FinRL_IQN",
+  "workingDirectory": "c:\\Users\\gurug\\Dropbox\\DataScience\\Speciale\\D-IQN-DSS\\FinRL_IQN",
+  "codeSnippet": "\nimport sys\nsys.path.insert(0, \"src\")\n\nfrom stock_investment_dss.algorithmic_trading.baselines.buy_and_hold_pit_single_ticker import run_buy_and_hold\n\nresult = run_buy_and_hold(\n    trade_data=\"data/market/daily/imports/market_data_demo10_new_2010_2026.csv\",\n    ticker=\"KO\",\n    dataset_tag=\"demo_10_new\",\n    initial_amount=1_000_000.0,\n)\nprint(\"Output files:\")\nfor k, p in result.items():\n    exists = p.exists()\n    size = p.stat().st_size if exists else 0\n    print(f\"  {k}: {p.name}  exists={exists}  size={size}\")\n\nimport pandas as pd\nmetrics = pd.read_csv(result[\"metrics\"])\nprint(\"\\nMetrics:\")\nprint(metrics[[\"strategy\",\"total_return_pct\",\"max_drawdown_pct\",\"annualized_sharpe\",\"days\"]].to_string(index=False))\n\nassert result[\"account\"].exists(), \"account CSV missing\"\nassert result[\"metrics\"].exists(), \"metrics CSV missing\"\nassert result[\"config\"].exists(), \"config JSON missing\"\nassert result[\"plot\"].exists(), \"plot PNG missing\"\n\ntr = float(metrics[\"total_return_pct\"].iloc[0])\ndd = float(metrics[\"max_drawdown_pct\"].iloc[0])\ndays = int(metrics[\"days\"].iloc[0])\nassert -200 < tr < 10000, f\"total_return_pct out of range: {tr}\"\nassert -100 <= dd <= 0, f\"max_drawdown_pct out of range: {dd}\"\nassert days > 1000, f\"days unexpectedly small: {days}\"\n\nimport json\ncfg = json.loads(result[\"config\"].read_text())\nassert \"stockdss\" not in str(cfg)\n\nprint(\"\\nAll assertions passed.\")\n"
+}
+
+
+
+Buy-and-hold smoke test passes. Now run the equal-weight portfolio baseline test:
+
+Used tool: pylance mcp server, pylanceRunCodeSnippet (MCP Server)
+Completed with input: {
+  "codeSnippet": "\nimport sys\nsys.path.insert(0, \"src\")\n\nfrom stock_investment_dss.algorithmic_trading.baselines.equal_weight_buy_and_hold_pit_portfolio import run_equal_weight_buy_and_hold_portfolio\n\nresult = run_equal_weight_buy_and_hold_portfolio(\n    trade_data=\"data/market/daily/imports/market_data_demo10_new_2010_2026.csv\",\n    dataset_tag=\"demo_10_new\",\n    initial_amount=1_000_000.0,\n)\nprint(\"Output files:\")\nfor k, p in result.items():\n    exists = p.exists()\n    size = p.stat().st_size if exists else 0\n    print(f\"  {k}: {p.name}  exists={exists}  size={size}\")\n\nimport pandas as pd\nmetrics = pd.read_csv(result[\"metrics\"])\nprint(\"\\nMetrics:\")\nprint(metrics[[\"strategy\",\"total_return_pct\",\"max_drawdown_pct\",\"annualized_sharpe\",\"days\"]].to_string(index=False))\n\nassert result[\"account\"].exists()\nassert result[\"metrics\"].exists()\nassert result[\"weights\"].exists()\nassert result[\"config\"].exists()\nassert result[\"plot\"].exists()\n\ntr = float(metrics[\"total_return_pct\"].iloc[0])\ndd = float(metrics[\"max_drawdown_pct\"].iloc[0])\ndays = int(metrics[\"days\"].iloc[0])\nassert -200 < tr < 10000, f\"total_return_pct: {tr}\"\nassert -100 <= dd <= 0, f\"max_drawdown_pct: {dd}\"\nassert days > 1000, f\"days: {days}\"\n\nprint(\"\\nAll assertions passed.\")\n",
+  "workingDirectory": "c:\\Users\\gurug\\Dropbox\\DataScience\\Speciale\\D-IQN-DSS\\FinRL_IQN",
+  "workspaceRoot": "file:///c:/Users/gurug/Dropbox/DataScience/Speciale/D-IQN-DSS/FinRL_IQN"
+}
+
+
+
+Both 3a files pass all checks. Marking done and moving to 3b–3d:
+
+Mark 3a todos done, start 3b
+
+Read [](file:///c%3A/Users/gurug/Dropbox/DataScience/Speciale/D-IQN-DSS/FinRL_IQN/external/ObjectRL_style/src/stockdss/algorithmic_trading/baselines/ema_crossover_pit_single_ticker.py)
+
+Starting: *Port sma_crossover_pit_single_ticker.py (3b)* (78/89)
+
+Read [](file:///c%3A/Users/gurug/Dropbox/DataScience/Speciale/D-IQN-DSS/FinRL_IQN/external/ObjectRL_style/src/stockdss/algorithmic_trading/baselines/sma_crossover_pit_single_ticker.py)
+
+Read [](file:///c%3A/Users/gurug/Dropbox/DataScience/Speciale/D-IQN-DSS/FinRL_IQN/external/ObjectRL_style/src/stockdss/algorithmic_trading/baselines/bollinger_mean_reversion_pit_single_ticker.py)
+
+Read [](file:///c%3A/Users/gurug/Dropbox/DataScience/Speciale/D-IQN-DSS/FinRL_IQN/external/ObjectRL_style/src/stockdss/algorithmic_trading/baselines/macd_signal_pit_single_ticker.py)
+
+Read [](file:///c%3A/Users/gurug/Dropbox/DataScience/Speciale/D-IQN-DSS/FinRL_IQN/external/ObjectRL_style/src/stockdss/algorithmic_trading/baselines/rsi_mean_reversion_pit_single_ticker.py)
+
+Read [](file:///c%3A/Users/gurug/Dropbox/DataScience/Speciale/D-IQN-DSS/FinRL_IQN/external/ObjectRL_style/src/stockdss/algorithmic_trading/baselines/breakout_pit_single_ticker.py)
+
+Read [](file:///c%3A/Users/gurug/Dropbox/DataScience/Speciale/D-IQN-DSS/FinRL_IQN/external/ObjectRL_style/src/stockdss/algorithmic_trading/baselines/volatility_filter_pit_single_ticker.py)
+
+Read [](file:///c%3A/Users/gurug/Dropbox/DataScience/Speciale/D-IQN-DSS/FinRL_IQN/external/ObjectRL_style/src/stockdss/algorithmic_trading/baselines/momentum_pit_single_ticker.py)
+
+Now I'll create all 8 remaining baseline files. The pattern for each: replace `stockdss` namespace, remove `make_single_ticker_output_dirs`, add pathlib output dir, use `json.dump`:
+````
+
+````
+
+````
+
+````
+
+````
+
+````
+
+````
+
+````
+
+````
+
+````
+
+````
+
+````
+
+````
+
+````
+
+````
+
+````
+Now py_compile all 8 new files:
+
+Used tool: pylance mcp server, pylanceRunCodeSnippet (MCP Server)
+Completed with input: {
+  "codeSnippet": "\nimport py_compile, pathlib\n\nbase = pathlib.Path(\"src/stock_investment_dss/algorithmic_trading/baselines\")\nfiles = [\n    \"sma_crossover_pit_single_ticker.py\",\n    \"ema_crossover_pit_single_ticker.py\",\n    \"macd_signal_pit_single_ticker.py\",\n    \"rsi_mean_reversion_pit_single_ticker.py\",\n    \"bollinger_mean_reversion_pit_single_ticker.py\",\n    \"breakout_pit_single_ticker.py\",\n    \"momentum_pit_single_ticker.py\",\n    \"volatility_filter_pit_single_ticker.py\",\n]\n\nfor f in files:\n    path = base / f\n    py_compile.compile(str(path), doraise=True)\n    print(f\"OK  {path.name}\")\n\nprint(\"\\nAll 8 files compiled successfully.\")\n",
+  "workingDirectory": "c:\\Users\\gurug\\Dropbox\\DataScience\\Speciale\\D-IQN-DSS\\FinRL_IQN",
+  "workspaceRoot": "file:///c:/Users/gurug/Dropbox/DataScience/Speciale/D-IQN-DSS/FinRL_IQN"
+}
+
+
+
+All 8 compile clean. Now run smoke tests for 3b–3d:
+
+Used tool: pylance mcp server, pylanceRunCodeSnippet (MCP Server)
+Completed with input: {
+  "codeSnippet": "\nimport sys\nsys.path.insert(0, \"src\")\n\nDATA = \"data/market/daily/imports/market_data_demo10_new_2010_2026.csv\"\nTICKER = \"KO\"\nTAG = \"demo_10_new\"\nAMOUNT = 1_000_000.0\n\nimport pandas as pd\n\nresults = {}\n\n# 3b: SMA\nfrom stock_investment_dss.algorithmic_trading.baselines.sma_crossover_pit_single_ticker import run_sma_crossover\nr = run_sma_crossover(trade_data=DATA, dataset_tag=TAG, ticker=TICKER, initial_amount=AMOUNT)\nresults[\"sma\"] = r\nm = pd.read_csv(r[\"metrics\"])\nprint(f\"SMA:   tr={m['total_return_pct'].iloc[0]:.2f}%  dd={m['max_drawdown_pct'].iloc[0]:.2f}%  days={m['days'].iloc[0]}\")\n\n# 3b: EMA\nfrom stock_investment_dss.algorithmic_trading.baselines.ema_crossover_pit_single_ticker import run_ema_crossover\nr = run_ema_crossover(trade_data=DATA, dataset_tag=TAG, ticker=TICKER, initial_amount=AMOUNT)\nresults[\"ema\"] = r\nm = pd.read_csv(r[\"metrics\"])\nprint(f\"EMA:   tr={m['total_return_pct'].iloc[0]:.2f}%  dd={m['max_drawdown_pct'].iloc[0]:.2f}%  days={m['days'].iloc[0]}\")\n\n# 3c: MACD\nfrom stock_investment_dss.algorithmic_trading.baselines.macd_signal_pit_single_ticker import run_macd_signal\nr = run_macd_signal(trade_data=DATA, dataset_tag=TAG, ticker=TICKER, initial_amount=AMOUNT)\nresults[\"macd\"] = r\nm = pd.read_csv(r[\"metrics\"])\nprint(f\"MACD:  tr={m['total_return_pct'].iloc[0]:.2f}%  dd={m['max_drawdown_pct'].iloc[0]:.2f}%  days={m['days'].iloc[0]}\")\n\n# 3c: RSI\nfrom stock_investment_dss.algorithmic_trading.baselines.rsi_mean_reversion_pit_single_ticker import run_rsi_mean_reversion\nr = run_rsi_mean_reversion(trade_data=DATA, dataset_tag=TAG, ticker=TICKER, initial_amount=AMOUNT)\nresults[\"rsi\"] = r\nm = pd.read_csv(r[\"metrics\"])\nprint(f\"RSI:   tr={m['total_return_pct'].iloc[0]:.2f}%  dd={m['max_drawdown_pct'].iloc[0]:.2f}%  days={m['days'].iloc[0]}\")\n\n# 3c: Bollinger\nfrom stock_investment_dss.algorithmic_trading.baselines.bollinger_mean_reversion_pit_single_ticker import run_bollinger_mean_reversion\nr = run_bollinger_mean_reversion(trade_data=DATA, dataset_tag=TAG, ticker=TICKER, initial_amount=AMOUNT)\nresults[\"boll\"] = r\nm = pd.read_csv(r[\"metrics\"])\nprint(f\"Boll:  tr={m['total_return_pct'].iloc[0]:.2f}%  dd={m['max_drawdown_pct'].iloc[0]:.2f}%  days={m['days'].iloc[0]}\")\n\n# 3d: Breakout\nfrom stock_investment_dss.algorithmic_trading.baselines.breakout_pit_single_ticker import run_breakout\nr = run_breakout(trade_data=DATA, dataset_tag=TAG, ticker=TICKER, initial_amount=AMOUNT)\nresults[\"breakout\"] = r\nm = pd.read_csv(r[\"metrics\"])\nprint(f\"Brk:   tr={m['total_return_pct'].iloc[0]:.2f}%  dd={m['max_drawdown_pct'].iloc[0]:.2f}%  days={m['days'].iloc[0]}\")\n\n# 3d: Momentum\nfrom stock_investment_dss.algorithmic_trading.baselines.momentum_pit_single_ticker import run_momentum\nr = run_momentum(trade_data=DATA, dataset_tag=TAG, ticker=TICKER, initial_amount=AMOUNT)\nresults[\"momentum\"] = r\nm = pd.read_csv(r[\"metrics\"])\nprint(f\"Mom:   tr={m['total_return_pct'].iloc[0]:.2f}%  dd={m['max_drawdown_pct'].iloc[0]:.2f}%  days={m['days'].iloc[0]}\")\n\n# 3d: Volatility filter\nfrom stock_investment_dss.algorithmic_trading.baselines.volatility_filter_pit_single_ticker import run_volatility_filter\nr = run_volatility_filter(trade_data=DATA, dataset_tag=TAG, ticker=TICKER, initial_amount=AMOUNT)\nresults[\"vf\"] = r\nm = pd.read_csv(r[\"metrics\"])\nprint(f\"VF:    tr={m['total_return_pct'].iloc[0]:.2f}%  dd={m['max_drawdown_pct'].iloc[0]:.2f}%  days={m['days'].iloc[0]}\")\n\n# Assertions\nfor name, res in results.items():\n    for k in (\"account\", \"metrics\", \"config\", \"plot\"):\n        assert res[k].exists(), f\"{name}: {k} missing\"\n    m = pd.read_csv(res[\"metrics\"])\n    tr = float(m[\"total_return_pct\"].iloc[0])\n    dd = float(m[\"max_drawdown_pct\"].iloc[0])\n    days = int(m[\"days\"].iloc[0])\n    assert -200 < tr < 10000, f\"{name} tr={tr}\"\n    assert -100 <= dd <= 0, f\"{name} dd={dd}\"\n    assert days > 1000, f\"{name} days={days}\"\n    cfg_text = res[\"config\"].read_text()\n    assert \"stockdss\" not in cfg_text, f\"{name}: stockdss in config\"\n\nprint(\"\\nAll assertions passed for all 8 strategies.\")\n",
+  "workingDirectory": "c:\\Users\\gurug\\Dropbox\\DataScience\\Speciale\\D-IQN-DSS\\FinRL_IQN",
+  "workspaceRoot": "file:///c:/Users/gurug/Dropbox/DataScience/Speciale/D-IQN-DSS/FinRL_IQN"
+}
+
+
+
+All 8 strategies pass. Now create the decision document and update SQL:
+````
+
+````
+
+
+Mark all etape3 todos done
+
+Completed: *Port sma_crossover_pit_single_ticker.py (3b)* (78/89)
+
+Mark decision doc done
+
+Completed: *Create etape_3_baselines_decision.md* (89/89)
+
+Etape 3 is complete. Summary:
+
+**Created 2 files this turn:**
+- `momentum_pit_single_ticker.py` — price return over lookback window; PIT-safe with `shift(1)`
+- `volatility_filter_pit_single_ticker.py` — momentum + annualised vol filter; V1 helpers replaced with Etape 2 imports
+
+**Smoke test results (all 8 strategies on KO, demo_10_new):**
+
+| Strategy | Return | Max DD |
+|---|---|---|
+| SMA crossover | +67.4% | −37.0% |
+| EMA crossover | +20.5% | −33.3% |
+| MACD signal | +87.1% | −20.1% |
+| RSI mean-reversion | +96.8% | −35.7% |
+| Bollinger mean-reversion | +325.4% | −35.7% |
+| Breakout | +6.6% | −35.9% |
+| **Momentum** | +8.9% | −36.6% |
+| **Volatility filter** | +22.5% | −32.8% |
+
+All assertions passed. Decision document written to `outputs/run_registry/etape_3_baselines_decision.md`.
+
+Made changes.
+
+
+--------------
+
+Jeg gennemgik den med Claude, og vi kom frem til følgende (der mangler noget).
+Her er samtalen:
+
+Ja, fuldt enig med ChatGPT.
+
+ChatGPT's vurdering matcher min, og den fremhæver præcis de samme tre punkter:
+
+1. **Proces-afvigelse acceptabel** — Copilot porterede alle 10 i ét hug, men 3a blev valideret først, så risikoen var minimeret
+2. **Path-konvention korrekt** — `outputs/run_registry/algorithmic_baselines/<dataset>/<strategy>/<ticker>/` matcher roadmap
+3. **Filnavne specifikke (ikke generiske)** — `<ticker>_<strategy>_<artifact>.<ext>` er en forbedring, men etape 5/6 skal bruge glob-patterns
+
+## Det ene punkt ChatGPT tilføjer som jeg ikke nævnte
+
+**`__pycache__` mappe-håndtering:**
+
+> "Sørg for at `__pycache__` ikke kommer med i commit. Hvis `git status` viser `__pycache__`, så skal de enten være i `.gitignore` eller slettes før commit."
+
+Det er en **vigtig præcision**. Din terminal output viste flere `__pycache__` mapper:
+
+```
+src\stock_investment_dss\algorithmic_trading\__pycache__\__init__.cpython-313.pyc
+src\stock_investment_dss\algorithmic_trading\baselines\__pycache__\
+  __init__.cpython-313.pyc
+  bollinger_mean_reversion_pit_single_ticker.cpython-311.pyc
+  ...
+```
+
+Hvis disse ender i git commit, så har du:
+- Binær-filer commit'et i repo (bloat)
+- Cross-platform incompatibility (.pyc er Python-version-specifik — Python 3.11 vs 3.13 viser i navne)
+- Akademisk hygiejne-issue — censor kan undre sig over hvorfor compiled bytecode er commit'et
+
+## Tjek og fix før commit
+
+**Step 1: Tjek om __pycache__ er i .gitignore**
+```powershell
+Get-Content .gitignore | Select-String "pycache"
+```
+
+Hvis det returnerer en linje som `__pycache__/` eller `*.pyc`, så er du allerede beskyttet — gå direkte til Step 2.
+
+Hvis det returnerer tomt, så tilføj følgende til `.gitignore`:
+```
+__pycache__/
+*.pyc
+*.pyo
+```
+
+**Step 2: Verificer at __pycache__ ikke vises i git status**
+```powershell
+git status
+```
+
+Du bør **ikke** se `__pycache__` mapper i output. Hvis du gør, så er .gitignore ikke aktiv for de mapper.
+
+**Step 3: Hvis __pycache__ vises i git status, fjern dem fra staging**
+```powershell
+git rm -r --cached src/stock_investment_dss/algorithmic_trading/__pycache__/
+git rm -r --cached src/stock_investment_dss/algorithmic_trading/baselines/__pycache__/
+```
+
+**Step 4: Nu kan du committe rent**
+```powershell
+git status  # verificer kun ønskede filer er staged
+git add src/stock_investment_dss/algorithmic_trading/
+git add outputs/run_registry/algorithmic_baselines/
+git add outputs/run_registry/etape_3_baselines_decision.md
+git commit -m "Etape 3 complete: V1 algorithmic baselines port (10 strategies)"
+git tag etape-3-complete
+```
+
+**Step 5: Opdater TODO**
+
+Brug min foreslåede TODO-blok fra forrige besked (med findings-linjer), eller ChatGPT's kortere version. Jeg vil anbefale min version fordi den dokumenterer thesis-evidence findings direkte i TODO.
+
+**Step 6: Commit TODO**
+```powershell
+git add TODO.md
+git commit -m "TODO: mark etape 3 complete, etape 4 now"
+```
+
+## Konkret hvad jeg er enig med ChatGPT om
+
+- ✅ Etape 3 er teknisk og fagligt fuldført
+- ✅ Proces-afvigelsen (10 i ét hug) er acceptabel her
+- ✅ Path-konvention er korrekt
+- ✅ File-naming pattern er en forbedring, men kræver opmærksomhed til etape 5/6
+- ✅ Decision document er thesis-grade
+- ✅ Commit, tag, opdater TODO
+- ✅ Tjek `__pycache__` håndtering før commit
+
+## Konklusion
+
+**Send commit-sekvensen efter `__pycache__`-tjekket.** Når etape 3 er commit'et og tagget, og TODO er opdateret, så er vi klar til etape 4.
+
+Etape 4 (FinRL parametric RL baselines) bliver mere kompleks fordi den involverer:
+- Pre-step audit (V2 har formentlig allerede `baselines/finrl_baseline_suite.py`)
+- stable_baselines3 dependencies
+- 3 nye runner-scripts (data prep, training, backtest)
+- A2C, DDPG, PPO, TD3, SAC + MVO baselines
+- Lang training-tid (vi bruger `--finrl-timesteps=100` for smoke test)
+
+Men vi har nu en stærk foundation fra etape 1, 2 og 3 at bygge på. Send commits, og send mig besked når etape 3 er endeligt lukket, så lægger jeg etape 4-promten klar.
+
+**Etape 3 er den mest produktive etape i hele sessionen. Godt arbejde.**
+
+--------------------------------
+
+Mig:
+Fint. JFr dette endelige v1 summary plot 
+
+Vil du lige verificere, at koden pt har ALLE DISSE ALGORITMIC BASELINES PÅ PLADS KORREKT I v2 Etape 3 ?
+
+Jeg vil påpege at dalle de grønne i plottet er Algoritmic Trading baselines, og der bør faktisk være 24 og ikke 10.
+
+
+Du får også lige hele src koden fra v1 så der ikke er forvirring eller noget
+
+Så fordi jeg netop havde 24 Algoritmic baselines i V1, forstår jeg ikke hvorfor den siger 
+
+
+"
+Smoke test results (all 8 strategies on KO, demo_10_new):
+Strategy	Return	Max DD
+SMA crossover	+67.4%	−37.0%
+EMA crossover	+20.5%	−33.3%
+MACD signal	+87.1%	−20.1%
+RSI mean-reversion	+96.8%	−35.7%
+Bollinger mean-reversion	+325.4%	−35.7%
+Breakout	+6.6%	−35.9%
+Momentum	+8.9%	−36.6%
+Volatility filter	+22.5%	−32.8%
+"
+
+
+Jeg har tilføjet filerne: summary_dashboard_V1.png og baselines_list.png (med de 24 algorithmic trading baselines) til projekt filerne
+
+--------------------------------
+
+Claude:
+God observation. Lad mig undersøge det ordentligt.Lige som vi troede — V1 har **10 baseline implementations** i kode. Lad mig nu udrede hvad de 24 grønne strategier i plottet faktisk er.Nu får vi noget interessant. Der er en `run_all_algorithmic_experiments.py`-fil. Det er meget sandsynligt der hvor de 24 konfigurationer er defineret.Nu er det krystalklart. Lad mig identificere de 24 strategier i plottet og bekræfte hvad der sker.
+
+## Diagnose: Du har helt ret
+
+V1 har **10 baseline-strategi-implementationer**, men `run_all_algorithmic_experiments.py` kører dem med **parameter grids** — så samme baseline-implementering køres med forskellige hyper-parametre og producerer separate run-outputs.
+
+Plottet `baselines_list.png` viser de 24 grønne strategier fra et faktisk V1 run:
+
+```
+AAPL_vol_filter_m5_v10_0.4         (volatility_filter, momentum=5, vol_window=10, max_vol=0.4)
+AAPL_momentum_5                     (momentum, lookback=5)
+AAPL_sma_50_200                     (sma_crossover, fast=50, slow=200)
+AAPL_sma_20_50                      (sma_crossover, fast=20, slow=50)
+AAPL_momentum_60                    (momentum, lookback=60)
+AAPL_ema_20_50                      (ema_crossover, fast=20, slow=50)
+AAPL_breakout_55                    (breakout, lookback=55)
+AAPL_rsi_14_30_70                   (rsi_mean_reversion, window=14, oversold=30, overbought=70)
+AAPL_rsi_14_25_75                   (rsi_mean_reversion, window=14, oversold=25, overbought=75)
+AAPL_macd_8_21_9                    (macd_signal, fast=8, slow=21, signal=9)
+AAPL_breakout_10                    (breakout, lookback=10)
+AAPL_macd_12_26_9                   (macd_signal, fast=12, slow=26, signal=9)  [default]
+AAPL_sma_5_20                       (sma_crossover, fast=5, slow=20)
+AAPL_ema_5_20                       (ema_crossover, fast=5, slow=20)
+AAPL_bollinger_mr_20_2.5            (bollinger_mr, window=20, num_std=2.5)
+AAPL_bollinger_mr_20_2              (bollinger_mr, window=20, num_std=2.0)
+AAPL_ema_12_26                      (ema_crossover, fast=12, slow=26)  [default]
+AAPL_vol_filter_m10_v20_0.4         (volatility_filter, momentum=10, vol=20, max=0.4)
+AAPL_momentum_10                    (momentum, lookback=10)
+AAPL_vol_filter_m20_v20_0.4         (volatility_filter, momentum=20, vol=20, max=0.4)
+AAPL_momentum_20                    (momentum, lookback=20)
+AAPL_breakout_20                    (breakout, lookback=20)  [default]
+AAPL_buy_and_hold                   (buy_and_hold)
+AAPL_sma_10_30                      (sma_crossover, fast=10, slow=30)
+```
+
+Det er 24 grønne strategier = **10 baseline implementations × multiple parameter configurations**.
+
+## Hvad mangler i V2 etape 3
+
+V2 etape 3 har implementeret **10 baseline-koder** (én per strategi-type). Men V2 mangler:
+
+1. **`run_all_algorithmic_experiments.py`** — orkestrator-scriptet der kører alle baselines med parameter grids
+2. **Parameter grid CLI args** — som `--sma-grid "20:50,50:200,100:300"` der kører 3 SMA-konfigurationer
+3. **Compare/summary-scriptet** — `compare_algorithmic_results.py` der laver det 24-strategi summary
+
+## Min vurdering: Etape 3 er ikke fuldt færdig
+
+Etape 3 har leveret **infrastrukturen** (10 baseline implementations) men ikke **orchestratoren** der genererer de 24 strategier i plottet.
+
+**To måder at se det på:**
+
+**Option A: Etape 3 er fuldført som specificeret i TODO.**
+
+Din TODO sagde:
+> - 10 baselines = "intuition-based / ad hoc" comparison from problem formulation
+
+Copilot leverede 10 baseline implementations. Det matcher TODO-bogstavet.
+
+Men det matcher **ikke** V1's faktiske evidence package, som genererer 24 forskellige strategi-konfigurationer ved at variere hyper-parametre.
+
+**Option B: Etape 3 er fagligt ufuldstændig — den mangler grid runner.**
+
+Hvis du vil reproducere V1's summary dashboard fra plottet, så har du brug for at køre alle 24 konfigurationer, ikke kun de 10 default-konfigurationer.
+
+## Min anbefaling
+
+**Tilføj en mini etape 3.5 (eller udvid etape 3) før du committer.**
+
+Konkret bør V2 have:
+
+```
+src/stock_investment_dss/algorithmic_trading/experiments/
+    __init__.py
+    run_all_algorithmic_experiments.py
+```
+
+Hvor `run_all_algorithmic_experiments.py` matcher V1's funktionalitet:
+- Tager `--sma-grid`, `--ema-grid`, `--momentum-windows`, `--rsi-grid`, `--macd-grid`, `--bollinger-grid`, `--breakout-windows`, `--volatility-grid` som CLI args
+- Importerer V2's 10 baseline-funktioner direkte (ikke via subprocess som V1)
+- Looper over parameter combinations
+- Genererer outputs under `outputs/run_registry/algorithmic_baselines/<dataset>/<strategy>_<params>/<ticker>/`
+- Producerer en samlet summary CSV
+
+V1's default grids fra plottet kan udledes:
+- SMA: 5/20, 10/30, 20/50, 50/200 (4 configs)
+- EMA: 5/20, 12/26, 20/50 (3 configs)
+- Momentum: 5, 10, 20, 60 (4 configs)
+- RSI: 14/30/70, 14/25/75 (2 configs)
+- MACD: 8/21/9, 12/26/9 (2 configs)
+- Bollinger: 20/2.0, 20/2.5 (2 configs)
+- Breakout: 10, 20, 55 (3 configs)
+- Volatility filter: m5/v10/0.4, m10/v20/0.4, m20/v20/0.4 (3 configs)
+- Buy and hold: 1 config
+- **Total: 24 configs** ✅
+
+## Tre options til hvad du gør nu
+
+**Option 1: Accept etape 3 som lukket nu, tilføj grid runner som etape 3.5 senere**
+- Pro: Får etape 4-7 hurtigere
+- Con: Etape 5 (summary dashboard) skal vente på grid runner alligevel for at have 24 strategier at vise
+
+**Option 2: Udvid etape 3 nu med grid runner og parameter configs**
+- Pro: Konsistent med V1's evidence package
+- Pro: Etape 5 kan direkte bruge outputs uden ekstra arbejde
+- Con: Tager mere tid før vi går videre
+
+**Option 3: Mini etape 3e (efter 3a-3d) med grid runner**
+- Tilføj en explicit 3e til TODO: "grid runner orchestrator"
+- Specificer parameter grids matching V1's evidence package
+- Implementer som separat Copilot /plan
+
+**Min anbefaling: Option 3.**
+
+Det er ærligt overfor det Copilot allerede har leveret (3a-3d er done), og det dokumenterer eksplicit at grid runner er nødvendig for thesis evidence package. Det forhindrer at vi senere har huller når etape 5 skal lave summary dashboard.
+
+## Konkret hvad du gør
+
+1. **Commit etape 3 a-d nu** (de 10 baseline implementations er færdige)
+2. **Tilføj etape 3e til TODO:**
+
+```
+V1 etape 3e algorithmic baselines grid runner ⬅️ NOW (extension to etape 3)
+  - new file: src/stock_investment_dss/algorithmic_trading/experiments/__init__.py
+  - new file: src/stock_investment_dss/algorithmic_trading/experiments/run_all_algorithmic_experiments.py
+  - imports V2's 10 baseline runners directly (no subprocess)
+  - parameter grid CLI args matching V1 evidence package
+  - default grids reproduce V1's 24 strategy configurations:
+    - sma_grid: 5:20, 10:30, 20:50, 50:200 (4 configs)
+    - ema_grid: 5:20, 12:26, 20:50 (3 configs)
+    - momentum_windows: 5, 10, 20, 60 (4 configs)
+    - rsi_grid: 14:30:70, 14:25:75 (2 configs)
+    - macd_grid: 8:21:9, 12:26:9 (2 configs)
+    - bollinger_grid: 20:2.0, 20:2.5 (2 configs)
+    - breakout_windows: 10, 20, 55 (3 configs)
+    - volatility_grid: 5:10:0.4, 10:20:0.4, 20:20:0.4 (3 configs)
+    - buy_and_hold: 1 config
+    - total: 24 strategy configurations
+  - output dir pattern: outputs/run_registry/algorithmic_baselines/<dataset>/<strategy>_<params>/<ticker>/
+  - aggregated summary csv: outputs/run_registry/algorithmic_baselines/<dataset>/summary.csv
+  - smoke test: run on KO with default grids, expect 24 run subdirectories
+  - decision documented in outputs/run_registry/etape_3e_grid_runner_decision.md
+  - backup before starting
+```
+
+3. **Lad mig vide når commit + TODO update er gjort**, så lægger jeg etape 3e's Copilot /plan klar med:
+- Audit af V1's `run_all_algorithmic_experiments.py`
+- Subprocess vs direct import beslutning
+- Default grids matching V1 (verificeret fra `baselines_list.png`)
+- Output path pattern for params (`sma_50_200/`, `momentum_60/`, etc.)
+- Smoke test scope
+
+**Du har fanget en vigtig ufuldstændighed. Godt observation.** V1's evidence package havde 24 strategier — V2 etape 3a-3d har 10 implementations. Den manglende grid runner skal porteres for at matche thesis evidence package.
+
+Tak for at tilføje `baselines_list.png` til projekt-filerne — det var præcis det artefakt der gjorde det muligt at identificere parametriske grids og default-konfigurationer.
+
+--------------------------------
+
+Mig:
+
+NEJ ! VI GÅR MED
+
+Option 2: Udvid etape 3 nu med grid runner og parameter configs
+
+* Pro: Konsistent med V1's evidence package
+* Pro: Etape 5 kan direkte bruge outputs uden ekstra arbejde
+* Con: Tager mere tid før vi går videre
+
+
+DET HELE SKAL MED NU
+
+--------------------------------
+
+
+Claude:
+
+Forstået. Vi udvider etape 3 nu med grid runner og parameter configs. **Det hele skal med før vi går videre.**
+
+Lad mig forberede den komplette plan.
+
+## Hvad der skal tilføjes til etape 3 (før commit)
+
+V2 har de 10 baseline implementations på plads (3a-3d done). Det vi mangler er:
+
+1. **Grid runner orchestrator** der kører hver baseline med flere parameter-konfigurationer
+2. **Default parameter grids** der reproducerer V1's 24 strategi-konfigurationer
+3. **Output path pattern** der inkluderer parameter-info (`sma_50_200/`, `momentum_60/`, etc.)
+4. **Aggregated summary CSV** der samler alle 24 strategier per dataset
+
+Lad mig først verificere V1's faktiske default grids ved at læse den fulde liste fra plottet.Lad mig nu udtrække de eksakte 24 grønne (algorithmic) strategier og deres parameter-konfigurationer.
+
+## De 24 grønne strategier identificeret fra plottet
+
+```
+1.  AAPL_vol_filter_m5_v10_0.4       volatility_filter: momentum=5,  vol_window=10, max_vol=0.4
+2.  AAPL_momentum_5                  momentum: lookback=5
+3.  AAPL_sma_50_200                  sma_crossover: fast=50, slow=200
+4.  AAPL_sma_20_50                   sma_crossover: fast=20, slow=50
+5.  AAPL_momentum_60                 momentum: lookback=60
+6.  AAPL_ema_20_50                   ema_crossover: fast=20, slow=50
+7.  AAPL_breakout_55                 breakout: lookback=55
+8.  AAPL_rsi_14_30_70                rsi: window=14, oversold=30, overbought=70
+9.  AAPL_rsi_14_25_75                rsi: window=14, oversold=25, overbought=75
+10. AAPL_macd_8_21_9                 macd: fast=8, slow=21, signal=9
+11. AAPL_breakout_10                 breakout: lookback=10
+12. AAPL_macd_12_26_9                macd: fast=12, slow=26, signal=9 (default)
+13. AAPL_sma_5_20                    sma_crossover: fast=5, slow=20
+14. AAPL_ema_5_20                    ema_crossover: fast=5, slow=20
+15. AAPL_bollinger_mr_20_2.5         bollinger_mr: window=20, num_std=2.5
+16. AAPL_bollinger_mr_20_2           bollinger_mr: window=20, num_std=2.0 (default)
+17. AAPL_ema_12_26                   ema_crossover: fast=12, slow=26 (default)
+18. AAPL_vol_filter_m10_v20_0.4      volatility_filter: m=10, v=20, max=0.4 (default)
+19. AAPL_momentum_10                 momentum: lookback=10
+20. AAPL_vol_filter_m20_v20_0.4      volatility_filter: m=20, v=20, max=0.4
+21. AAPL_momentum_20                 momentum: lookback=20
+22. AAPL_breakout_20                 breakout: lookback=20 (default)
+23. AAPL_buy_and_hold                buy_and_hold (no params)
+24. AAPL_sma_10_30                   sma_crossover: fast=10, slow=30
+```
+
+## Konsoliderede grids per strategi-type
+
+```
+buy_and_hold:           1 config
+sma_crossover (4):      5:20, 10:30, 20:50, 50:200
+ema_crossover (3):      5:20, 12:26, 20:50
+momentum (4):           5, 10, 20, 60
+rsi (2):                14:30:70, 14:25:75
+macd (2):               8:21:9, 12:26:9
+bollinger_mr (2):       20:2.0, 20:2.5
+breakout (3):           10, 20, 55
+volatility_filter (3):  5:10:0.4, 10:20:0.4, 20:20:0.4
+
+equal_weight_portfolio: not visible in plot (portfolio level, not per-ticker)
+                        — should be added separately for portfolio comparison
+
+Total: 1+4+3+4+2+2+2+3+3 = 24 single-ticker configurations ✅
+```
+
+Bemærk at `equal_weight_buy_and_hold_pit_portfolio` ikke vises i plottet fordi det er en portfolio-strategi (ikke single-ticker). Vi har den med i etape 3a som separat output.
+
+## Copilot /plan-prompt for etape 3e (grid runner extension)
+
+Her er den komplette prompt klar til at sende:
+
+```
+/plan
+
+CRITICAL: This is /plan mode.
+Report the plan only.
+Do NOT implement anything yet.
+Do NOT create files.
+Do NOT modify files.
+Do NOT run smoke tests yet.
+Do NOT run training.
+Wait for explicit approval before any file changes, file creation, or implementation.
+
+HARD IMPLEMENTATION TRIGGER:
+Do not implement anything until I later write the exact phrase:
+
+IMPLEMENT NOW
+
+as a standalone message.
+
+We are extending V1 → V2 thesis port plan etape 3 with substep 3e.
+
+Etape 3e:
+Algorithmic baselines grid runner orchestrator.
+
+Context:
+- Etape 1 is complete.
+- Etape 2 is complete.
+- Etape 3 substeps 3a, 3b, 3c, 3d are complete: 10 baseline implementations are 
+  in src/stock_investment_dss/algorithmic_trading/baselines/, each runnable on 
+  a single ticker with default parameters.
+- V1 evidence package shows 24 algorithmic strategy configurations per ticker, 
+  produced by running the 10 baselines with multiple parameter combinations.
+- V1 reference: external/ObjectRL_style/src/stockdss/algorithmic_trading/
+  experiments/run_all_algorithmic_experiments.py uses subprocess to call each
+  baseline runner with parameter grids.
+- Etape 3e ports this grid runner pattern to V2, but uses direct function imports 
+  instead of subprocess (cleaner, faster, V2-native).
+- This must be done before etape 5 (summary dashboard) because the dashboard 
+  needs all 24 strategy outputs aggregated.
+
+Academic repository hygiene:
+- This repository may be submitted together with a master thesis.
+- Do not mention ChatGPT, Claude, Copilot, AI assistant, prompts, conversations, 
+  or model names in any created file.
+- All generated documentation must be neutral, academic, and project-facing.
+- Use terms like "audit result", "design decision", "implementation decision", 
+  "rationale", "validation", "scope".
+- Any decision document or README must read like internal project documentation.
+
+Pre-audit safety check:
+- First run or inspect `git status`.
+- Report whether the working tree is clean (etape 3a-3d should be committed at 
+  this point, but verify).
+- If etape 3a-3d are not yet committed, report that and ask the user before 
+  continuing.
+- Do not modify anything during this check.
+
+Do NOT run training.
+Do NOT create new RL experiments.
+Do NOT modify IQN core.
+Do NOT modify the 10 baseline files from etape 3a-3d.
+Do NOT modify etape 2 metrics module.
+Do NOT modify configs.
+Do NOT touch EDL/HDP/FMP code.
+Do NOT modify TODO.md.
+Do NOT port FinRL baseline scripts yet.
+
+Goal:
+Create a grid runner orchestrator that runs all 10 algorithmic baselines with 
+multiple parameter configurations, producing 24 strategy outputs per ticker
+(matching V1 evidence package), and aggregating them into a single summary CSV.
+
+V1 source to inspect:
+external/ObjectRL_style/src/stockdss/algorithmic_trading/experiments/run_all_algorithmic_experiments.py
+
+V2 target files:
+src/stock_investment_dss/algorithmic_trading/experiments/__init__.py (new)
+src/stock_investment_dss/algorithmic_trading/experiments/run_all_algorithmic_experiments.py (new)
+
+Decision document:
+outputs/run_registry/etape_3e_grid_runner_decision.md (new)
+
+Required parameter grids (default, reproducing V1 evidence package):
+
+  sma_crossover:
+    (fast=5, slow=20)
+    (fast=10, slow=30)
+    (fast=20, slow=50)
+    (fast=50, slow=200)
+
+  ema_crossover:
+    (fast=5, slow=20)
+    (fast=12, slow=26)
+    (fast=20, slow=50)
+
+  momentum:
+    lookback=5
+    lookback=10
+    lookback=20
+    lookback=60
+
+  rsi_mean_reversion:
+    (window=14, oversold=30, overbought=70)
+    (window=14, oversold=25, overbought=75)
+
+  macd_signal:
+    (fast=8, slow=21, signal=9)
+    (fast=12, slow=26, signal=9)
+
+  bollinger_mean_reversion:
+    (window=20, num_std=2.0)
+    (window=20, num_std=2.5)
+
+  breakout:
+    lookback=10
+    lookback=20
+    lookback=55
+
+  volatility_filter:
+    (momentum_window=5, vol_window=10, max_vol=0.4)
+    (momentum_window=10, vol_window=20, max_vol=0.4)
+    (momentum_window=20, vol_window=20, max_vol=0.4)
+
+  buy_and_hold:
+    (no parameters)
+
+Total per ticker: 24 single-ticker strategy configurations.
+
+Implementation requirements:
+
+1. Direct function imports, not subprocess.
+   Call V2 baseline run functions directly from 
+   src/stock_investment_dss/algorithmic_trading/baselines/<baseline>.py.
+
+2. Output path pattern (extending etape 3 canonical path):
+   outputs/run_registry/algorithmic_baselines/<dataset_tag>/<strategy>_<params>/<ticker>/
+   
+   Examples:
+     outputs/run_registry/algorithmic_baselines/demo_10_new/sma_50_200/ko/
+     outputs/run_registry/algorithmic_baselines/demo_10_new/momentum_60/ko/
+     outputs/run_registry/algorithmic_baselines/demo_10_new/bollinger_mr_20_2/ko/
+   
+   Strategy folder naming convention:
+     - sma_crossover with fast=F slow=S      → sma_F_S
+     - ema_crossover with fast=F slow=S      → ema_F_S
+     - momentum with lookback=W              → momentum_W
+     - rsi with window=W os=OS ob=OB         → rsi_W_OS_OB
+     - macd with f=F s=S sig=SIG             → macd_F_S_SIG
+     - bollinger with w=W nstd=N             → bollinger_mr_W_N (N format: 2 or 2.5)
+     - breakout with lookback=W              → breakout_W
+     - vol_filter with m=M v=V max=X         → vol_filter_m_M_v_V_X (X format: 0.4)
+     - buy_and_hold                          → buy_and_hold
+
+3. Existing default-config outputs from etape 3 a-d (under sma_crossover/, 
+   ema_crossover/, etc.) are preserved as-is. The grid runner uses separate 
+   parameter-specific folder names so it does not overwrite them.
+
+4. Each baseline file in 3a-3d may need a thin refactor to support being called 
+   programmatically with arbitrary parameters. Audit each baseline's existing 
+   run_* function signature and report if it already accepts the required 
+   parameters as keyword arguments. If yes, no modifications needed. If no, 
+   recommend minimal additions in the plan.
+
+5. CLI args for the grid runner:
+   --trade-data PATH (required)
+   --dataset-tag STR (required)
+   --ticker STR (required, single ticker per invocation)
+   --initial-amount FLOAT (default 1_000_000.0)
+   --sma-grid STR (optional, comma-separated, e.g. "5:20,10:30,20:50,50:200")
+   --ema-grid STR (optional)
+   --momentum-windows STR (optional)
+   --rsi-grid STR (optional)
+   --macd-grid STR (optional)
+   --bollinger-grid STR (optional)
+   --breakout-windows STR (optional)
+   --volatility-grid STR (optional)
+   --skip-buy-and-hold (optional flag)
+   --continue-on-error (optional flag)
+
+   If a grid is not specified, use the default grid above.
+
+6. Aggregated summary CSV output:
+   outputs/run_registry/algorithmic_baselines/<dataset_tag>/<ticker>_summary.csv
+   
+   Columns:
+     strategy, config_label, total_return_pct, max_drawdown_pct, 
+     annualized_sharpe, days, source_metrics_csv
+   
+   One row per strategy configuration. Rows ordered by total_return_pct 
+   descending.
+
+7. Logging:
+   Print banner per experiment with strategy and config.
+   Print final summary table with all configurations and key metrics.
+   Print path to aggregated CSV.
+
+Decision document outputs/run_registry/etape_3e_grid_runner_decision.md must 
+document:
+
+   a) Purpose: extend etape 3 with parameter grid runner to reproduce V1 
+      evidence package (24 single-ticker strategy configurations).
+   b) Design decision: direct function imports vs subprocess. Justify direct 
+      imports (faster, less overhead, V2-native pattern).
+   c) Strategy folder naming convention (table).
+   d) Default parameter grids (table matching V1 evidence package).
+   e) Output path pattern: 
+      outputs/run_registry/algorithmic_baselines/<dataset>/<strategy>_<params>/<ticker>/
+   f) Aggregated summary CSV schema.
+   g) Backward compatibility: existing 3a-3d default-config outputs preserved.
+   h) Validation results (filled after smoke test).
+   i) Caveats: single-ticker scope, zero transaction costs, pre-computed 
+      indicator columns inherited from etape 3 baselines.
+   j) No references to AI assistants, prompts, or conversation history.
+
+Required plan sections:
+
+1. Git / working tree safety check
+   - report git status summary
+   - report whether working tree is clean
+   - report whether etape 3a-3d are committed and tagged etape-3-complete
+   - if not, stop and ask the user
+
+2. Files inspected
+   - V1 run_all_algorithmic_experiments.py
+   - V2 algorithmic_trading/baselines/*.py (all 10)
+   - V2 etape 2 trading_metrics.py
+
+3. Audit of V2 baseline function signatures
+   For each of the 10 V2 baseline files, report:
+   - exact function name (e.g. run_buy_and_hold, run_sma_crossover)
+   - current parameter list
+   - whether function already accepts the parameters required by grid runner
+   - if not, minimum refactor required
+
+4. Strategy folder naming convention table
+   For each of the 9 single-ticker strategy types, report:
+   - strategy_folder format (e.g. sma_F_S, momentum_W)
+   - example labels for default grid (e.g. sma_5_20, sma_10_30)
+
+5. Default parameter grids
+   Confirm the 24 single-ticker configurations match V1 evidence package.
+   Report total count: 24 single-ticker configs.
+
+6. Output path examples
+   List 5-10 example output paths under different strategies.
+
+7. Aggregated summary CSV design
+   - exact columns
+   - row ordering
+   - file name pattern
+
+8. Proposed implementation plan
+   - exact files to create
+   - exact files NOT to touch
+   - whether any baseline file in 3a-3d needs refactor (and why)
+
+9. Smoke test plan
+   - test ticker: KO
+   - test dataset: demo_10_new
+   - expected outputs: 24 strategy subdirectories under 
+     outputs/run_registry/algorithmic_baselines/demo_10_new/, each with 4 files
+   - expected summary CSV: outputs/run_registry/algorithmic_baselines/demo_10_new/ko_summary.csv with 24 rows
+   - py_compile passes
+   - all 24 configurations execute without errors
+   - aggregated CSV has correct schema
+
+10. Validation criteria
+    - py_compile passes on new grid runner
+    - smoke test passes
+    - 24 strategy subdirectories exist
+    - 24 metrics rows in aggregated summary CSV
+    - no V2 core or etape 2 or etape 3a-d baseline files modified
+    - no AI references in any created file
+
+11. Risks / caveats
+    - parameter naming conventions in 3a-3d baseline function signatures
+    - whether some baseline files need a thin refactor to accept all parameters
+    - long runtime: 24 configurations on KO with 4122 days, estimate
+
+Important:
+- Prefer direct function calls over subprocess.
+- Do not duplicate the 10 baseline implementations from 3a-3d.
+- Reuse 3a-3d baseline runners by calling their run_* functions.
+- Do not modify the existing 3a-3d baseline files unless absolutely required.
+- If a baseline file requires a refactor to support arbitrary parameters, report 
+  it explicitly in the plan and minimize the change.
+- The default parameter grids must reproduce V1 evidence package exactly.
+- No AI assistant references in any created file.
+
+Report the plan only.
+```
+
+## Hvad jeg især vil have Copilot til at undersøge i sin plan
+
+**Det vigtigste spørgsmål:** **Accepterer V2's 10 baseline `run_*` funktioner allerede de nødvendige parameters?**
+
+Hvis ja → grid runner kan implementeres uden at røre 3a-3d baselines
+Hvis nej → vi har et lille problem: grid runner kræver minimal refactor af nogle baseline-filer
+
+Lad mig hurtigt verificere det selv ved at læse V2's `run_sma_crossover` signatur (jeg har V2-koden uploaded).**Fantastiske nyheder.** Lad mig opsummere parametrene jeg lige har auditet:
+
+| Baseline | Parameters i V2 (allerede) | Grid runner kan kalde direkte? |
+|---|---|---|
+| buy_and_hold | (ingen) | ✅ |
+| sma_crossover | `fast_window`, `slow_window` | ✅ |
+| ema_crossover | `fast_window`, `slow_window` | ✅ |
+| momentum | `lookback_window` | ✅ |
+| rsi_mean_reversion | `rsi_window`, `oversold`, `overbought` | ✅ |
+| macd_signal | `fast_window`, `slow_window`, (signal også?) | ✅ |
+| bollinger_mr | `window`, `num_std` | ✅ |
+| breakout | `lookback_window` | ✅ |
+| volatility_filter | `momentum_window`, `volatility_window`, `max_annualized_volatility` | ✅ |
+| equal_weight_portfolio | (ingen) | ✅ |
+
+**Alle 10 baselines accepterer allerede de nødvendige parametre som keyword arguments.** Det betyder:
+- **INGEN refactor af 3a-3d baselines er nødvendig**
+- Grid runner kan importere `run_*` funktioner direkte og kalde dem i et loop
+- Etape 3e bliver en ren tilføjelse uden at røre eksisterende kode
+
+Vi skal lige verificere én ting — om macd_signal også accepterer `signal_window`:`signal_window` er allerede der. **Alle 10 baselines har de nødvendige parametre som keyword arguments.**
+
+## Et vigtigt problem at flagge
+
+Der er **ét issue** jeg lige opdager. V2's baseline-implementationer konstruerer output-path internt med en hardcoded strategi-folder. Lad mig verificere:**Aha — her er issue'et.** V2's `sma_crossover` baseline-implementation skriver til den hardcoded path `sma_crossover/`, ikke til en parametrisk path som `sma_50_200/`.
+
+Det betyder:
+- Hvis grid runner kalder `run_sma_crossover(fast_window=50, slow_window=200)` → output går til `algorithmic_baselines/demo_10_new/sma_crossover/ko/`
+- Hvis grid runner derefter kalder `run_sma_crossover(fast_window=20, slow_window=50)` → output **overskriver** den forrige fordi det skriver til samme `sma_crossover/ko/`
+
+## Konsekvens — vi har to options
+
+**Option A: Tilføj `strategy_folder_override` parameter til hver baseline-funktion**
+
+Lille refactor af 3a-3d baselines hvor `run_*` accepterer en optional `strategy_folder` parameter:
+
+```python
+def run_sma_crossover(
+    *,
+    trade_data,
+    dataset_tag,
+    ticker,
+    initial_amount=1_000_000.0,
+    fast_window=50,
+    slow_window=200,
+    transaction_cost_pct=0.0,
+    strategy_folder: str | None = None,  # NEW — overrides default "sma_crossover"
+):
+```
+
+Hvis `strategy_folder=None`, brug default (`"sma_crossover"`) — bevarer 3a-3d backward compatibility.
+Hvis `strategy_folder="sma_50_200"`, brug den i stedet.
+
+**Pro:** Grid runner kalder `run_sma_crossover(..., strategy_folder="sma_50_200")` og får korrekt path. Default-konfigurationer fra etape 3a-3d virker stadig uden ændringer.
+
+**Con:** Vi rører 3a-3d baseline-filerne. Men ændringen er minimal (én optional parameter med default `None`).
+
+**Option B: Grid runner kopierer outputs efter hver kørsel til parametrisk folder**
+
+Grid runner kalder `run_sma_crossover()`, lader den skrive til `sma_crossover/ko/`, og kopierer/renamer derefter folderen til `sma_50_200/ko/`.
+
+**Pro:** Ingen refactor af 3a-3d baselines.
+
+**Con:** Hacky. Hvis to konfigurationer kører parallelt (eller hvis runner crasher midt i), kan filer blive korrupt eller overskrevet. Race conditions.
+
+## Min anbefaling: Option A
+
+Option A er den **rene løsning**. Refactoren er minimal:
+
+1. Tilføj `strategy_folder: str | None = None` keyword parameter til hver `run_*` funktion
+2. Hvis `strategy_folder is None`, brug default (eksisterende string)
+3. Hvis `strategy_folder` is set, brug den i stedet for default
+
+Det er en **fully backward-compatible additive change**:
+- Eksisterende kald som `run_sma_crossover(...)` virker uændret
+- Etape 3a-3d outputs forbliver under `sma_crossover/`
+- Grid runner kan eksplicit specificere `strategy_folder="sma_50_200"` for parametriske kørsler
+
+## Den opdaterede Copilot /plan-prompt
+
+Lad mig opdatere ChatGPT's prompt til at inkludere denne refactor-instruktion. Her er den endelige version klar til at sende:
+
+```
+/plan
+
+CRITICAL: This is /plan mode.
+Report the plan only.
+Do NOT implement anything yet.
+Do NOT create files.
+Do NOT modify files.
+Do NOT run smoke tests yet.
+Do NOT run training.
+Wait for explicit approval before any file changes, file creation, or implementation.
+
+HARD IMPLEMENTATION TRIGGER:
+Do not implement anything until I later write the exact phrase:
+
+IMPLEMENT NOW
+
+as a standalone message.
+
+We are extending V1 → V2 thesis port plan etape 3 with substep 3e.
+
+Etape 3e:
+Algorithmic baselines grid runner orchestrator (parameter grid extension).
+
+Context:
+- Etape 1, 2, and 3a-3d are complete.
+- 10 baseline implementations exist in 
+  src/stock_investment_dss/algorithmic_trading/baselines/.
+- V1 evidence package shows 24 algorithmic strategy configurations per ticker, 
+  produced by running the 10 baselines with multiple parameter combinations.
+- Etape 3e adds:
+  (1) a minimal additive refactor of the 10 baseline files to accept an 
+      optional strategy_folder override parameter,
+  (2) a new grid runner orchestrator script,
+  (3) default parameter grids reproducing V1's 24 strategy configurations,
+  (4) an aggregated per-ticker summary CSV.
+- Without etape 3e, etape 5 (summary dashboard) cannot display 24 algorithmic 
+  strategies — only the 10 default configs from 3a-3d.
+
+Academic repository hygiene:
+- All generated documentation must be neutral, academic, project-facing.
+- No references to ChatGPT, Claude, Copilot, AI assistants, prompts, or 
+  conversation history in any created or modified file.
+- Frame all decisions as technical/methodological choices with rationale.
+
+Pre-audit safety check:
+- First run or inspect `git status`.
+- Confirm etape 3a-3d are committed and tagged etape-3-complete.
+- If not committed, report and ask before continuing.
+- Do not modify anything during this check.
+
+Universal DO NOT (etape 3e):
+- Do NOT run training.
+- Do NOT modify IQN core.
+- Do NOT modify etape 2 trading_metrics module.
+- Do NOT modify configs.
+- Do NOT modify TODO.md.
+- Do NOT port FinRL baseline scripts yet.
+- Do NOT touch EDL/HDP/FMP code.
+- Do NOT delete or move existing 3a-3d default-config outputs.
+
+Goal of etape 3e:
+
+Component A — Additive refactor of 10 baseline files:
+For each of the 10 V2 baseline files in 
+src/stock_investment_dss/algorithmic_trading/baselines/, add a new optional 
+keyword parameter:
+
+    strategy_folder: str | None = None
+
+Behavior:
+- If strategy_folder is None (default), use the existing hardcoded folder name 
+  (e.g. "sma_crossover", "buy_and_hold"). Backward compatible.
+- If strategy_folder is a non-empty string, use that string as the strategy 
+  folder name in the output path construction.
+
+The refactor must:
+- Be additive only (no removal of existing parameters or behavior changes).
+- Preserve the existing file-naming pattern (<ticker>_<strategy>_<artifact>) 
+  except that <strategy> in filenames uses the resolved folder name.
+- Update the docstring of each affected function to document the new parameter.
+- Not modify metrics computation, output file contents, or signal logic.
+
+Component B — Grid runner orchestrator:
+
+New file:
+src/stock_investment_dss/algorithmic_trading/experiments/__init__.py (empty 
+package marker)
+
+New file:
+src/stock_investment_dss/algorithmic_trading/experiments/run_all_algorithmic_experiments.py
+
+The grid runner imports run_* functions directly from 
+src/stock_investment_dss/algorithmic_trading/baselines/ and loops over 
+parameter configurations.
+
+Component C — Default parameter grids reproducing V1 evidence package:
+
+  sma_crossover (4 configs):
+    fast=5  slow=20    strategy_folder="sma_5_20"
+    fast=10 slow=30    strategy_folder="sma_10_30"
+    fast=20 slow=50    strategy_folder="sma_20_50"
+    fast=50 slow=200   strategy_folder="sma_50_200"
+
+  ema_crossover (3 configs):
+    fast=5  slow=20    strategy_folder="ema_5_20"
+    fast=12 slow=26    strategy_folder="ema_12_26"
+    fast=20 slow=50    strategy_folder="ema_20_50"
+
+  momentum (4 configs):
+    lookback=5    strategy_folder="momentum_5"
+    lookback=10   strategy_folder="momentum_10"
+    lookback=20   strategy_folder="momentum_20"
+    lookback=60   strategy_folder="momentum_60"
+
+  rsi_mean_reversion (2 configs):
+    window=14 oversold=30 overbought=70   strategy_folder="rsi_14_30_70"
+    window=14 oversold=25 overbought=75   strategy_folder="rsi_14_25_75"
+
+  macd_signal (2 configs):
+    fast=8  slow=21 signal=9   strategy_folder="macd_8_21_9"
+    fast=12 slow=26 signal=9   strategy_folder="macd_12_26_9"
+
+  bollinger_mean_reversion (2 configs):
+    window=20 num_std=2.0   strategy_folder="bollinger_mr_20_2"
+    window=20 num_std=2.5   strategy_folder="bollinger_mr_20_2.5"
+
+  breakout (3 configs):
+    lookback=10   strategy_folder="breakout_10"
+    lookback=20   strategy_folder="breakout_20"
+    lookback=55   strategy_folder="breakout_55"
+
+  volatility_filter (3 configs):
+    m=5  v=10 max=0.4   strategy_folder="vol_filter_m5_v10_0.4"
+    m=10 v=20 max=0.4   strategy_folder="vol_filter_m10_v20_0.4"
+    m=20 v=20 max=0.4   strategy_folder="vol_filter_m20_v20_0.4"
+
+  buy_and_hold (1 config):
+    no parameters   strategy_folder="buy_and_hold"
+
+Total: 24 single-ticker strategy configurations per ticker.
+
+Component D — CLI args for grid runner:
+
+  --trade-data PATH (required)
+  --dataset-tag STR (required)
+  --ticker STR (required, single ticker per invocation for single-ticker grid)
+  --initial-amount FLOAT (default 1_000_000.0)
+  --sma-grid STR (optional, "fast:slow,fast:slow")
+  --ema-grid STR (optional, same format)
+  --momentum-windows STR (optional, comma list)
+  --rsi-grid STR (optional, "window:os:ob,...")
+  --macd-grid STR (optional, "fast:slow:signal,...")
+  --bollinger-grid STR (optional, "window:num_std,...")
+  --breakout-windows STR (optional, comma list)
+  --volatility-grid STR (optional, "m:v:max,...")
+  --skip-buy-and-hold (optional flag)
+  --continue-on-error (optional flag)
+
+If a grid is not specified, use the V1-reproduction default grid above.
+
+Component E — Aggregated summary CSV:
+
+Output path:
+outputs/run_registry/algorithmic_baselines/<dataset_tag>/<ticker>_strategy_grid_summary.csv
+
+Schema (one row per strategy configuration):
+  ticker, strategy_type, config_label, strategy_folder, 
+  total_return_pct, max_drawdown_pct, annualized_sharpe, days, 
+  source_metrics_csv
+
+Ordering: total_return_pct descending.
+
+Component F — Output path pattern (extends etape 3):
+
+outputs/run_registry/algorithmic_baselines/<dataset_tag>/<strategy_folder>/<ticker>/
+
+Where <strategy_folder> is the parametric folder name from Component C.
+
+Existing 3a-3d default-config outputs (e.g. 
+algorithmic_baselines/demo_10_new/sma_crossover/ko/) are preserved untouched 
+because their hardcoded strategy_folder="sma_crossover" is still the default 
+when grid runner is not used.
+
+When grid runner is used:
+- For sma_crossover with fast=50, slow=200, output goes to sma_50_200/ko/, 
+  NOT sma_crossover/ko/.
+
+Component G — Decision document:
+
+New file:
+outputs/run_registry/etape_3e_grid_runner_decision.md
+
+Must document:
+- Purpose: extend etape 3 to reproduce V1 evidence package (24 configurations).
+- Design decision: direct function imports vs subprocess. Justify direct 
+  imports (faster, V2-native, no shell escaping needed).
+- Design decision: additive strategy_folder parameter vs new wrapper functions.
+  Justify additive parameter (minimal change, backward compatible).
+- Strategy folder naming convention table.
+- Default parameter grids table matching V1 evidence package.
+- Aggregated summary CSV schema.
+- Validation results (filled after smoke test).
+- Caveats: single-ticker scope, zero transaction costs except sma_crossover, 
+  pre-computed indicator inheritance from etape 3 baselines.
+- Backward compatibility: existing 3a-3d default outputs untouched.
+- No references to AI assistants, prompts, or conversation history.
+
+Required plan sections:
+
+1. Git / working tree safety check
+   - report git status
+   - confirm working tree clean
+   - confirm etape-3-complete tag exists
+   - if any issue, stop and ask
+
+2. Audit of 10 baseline function signatures
+   For each baseline, report:
+   - exact current signature
+   - which parameters already accept the values needed by grid runner
+   - the exact line where output_dir is constructed
+   - the exact line where strategy_folder string appears
+   - confirmation that strategy_folder parameter addition is purely additive
+
+3. Refactor plan for 10 baseline files
+   - exact diff scope per file (show before/after for one example)
+   - confirmation that file naming patterns are preserved
+   - confirmation that default behavior is unchanged
+
+4. Grid runner script plan
+   - module structure
+   - argparse setup
+   - default grid definitions (24 configs)
+   - main loop pseudo-code
+   - error handling pattern (continue-on-error)
+   - aggregated CSV write pattern
+
+5. Output path examples
+   List 5+ example paths showing parametric folders.
+
+6. Aggregated summary CSV design
+   Exact columns and row example.
+
+7. Validation plan
+   - py_compile passes on all modified baseline files
+   - py_compile passes on new grid runner
+   - smoke test on KO with default grid (24 configs)
+   - verify 24 subdirectories created under demo_10_new/
+   - verify aggregated summary CSV has 24 rows
+   - verify existing 3a-3d default-config outputs untouched
+   - verify backward compatibility: call run_sma_crossover() without 
+     strategy_folder, confirm it writes to sma_crossover/ as before
+   - confirm no AI references in any created/modified file
+
+8. Risks / caveats
+   - long runtime estimate for 24 configs on KO 4122 days
+   - any baseline that may need additional parameter
+   - decision_doc completeness
+
+9. Files affected summary
+   Files modified: 10 baseline files (additive parameter only)
+   Files created: 3 files (experiments/__init__.py, run_all_algorithmic_experiments.py, etape_3e_grid_runner_decision.md)
+   Files untouched: everything else
+
+Important:
+- Default behavior of all 10 baselines must remain unchanged.
+- Existing etape 3a-3d outputs must remain untouched.
+- Aggregated CSV name must clearly indicate it is a grid summary 
+  (e.g. <ticker>_strategy_grid_summary.csv).
+- The 24 default configurations must match V1 evidence package exactly.
+
+Report the plan only.
+```
+
+## Min vurdering
+
+Den her prompt:
+
+1. **Bygger på det vi allerede har gjort i etape 3a-3d** — ingen scrapping, ingen rewrite
+2. **Refactor er minimal og backward-compatible** — kun én optional parameter tilføjet til hver baseline
+3. **Reproducerer V1's exact evidence package** — 24 strategier matcher plottet
+4. **Forbereder etape 5** — summary dashboard kan nu have 24 grønne strategier
+5. **Bibeholder akademisk hygiejne** — alle filer er thesis-safe
+
+## Hvad du gør lige nu
+
+**Step 1: Send /plan-prompten ovenfor til Copilot**
+
+Den er klar til at sende uden ændringer.
+
+**Step 2: Når Copilot's plan-svar lander, send det herind**
+
+Vi reviewer plan-svaret sammen før IMPLEMENT NOW. Særligt vil jeg kigge på:
+
+1. Refactor scope per baseline-fil — er det virkelig kun additive?
+2. Strategy folder naming convention — matcher den V1 evidence package?
+3. Default grid configurations — alle 24 til stede?
+4. Backward compatibility — kan eksisterende 3a-3d kald stadig virke?
+5. Akademisk tone i decision document
+
+**Step 3 (efter implementation): Verificer outputs**
+
+Når Copilot har implementeret og kørt smoke test, skal vi se:
+
+- 24 nye subdirectories under `outputs/run_registry/algorithmic_baselines/demo_10_new/`
+- 24 rækker i `ko_strategy_grid_summary.csv`
+- Etape 3a-3d default-outputs stadig intakte
+- Decision document thesis-safe
+
+Send promten til Copilot. Det her er den rigtige beslutning — vi får hele evidence package klar før etape 4.
+
+--------------------------------
+
+
+Mig:
+
+jeg ved ikke om det hjælper noget men:
+
+billedet med summary. hed enlig summary_dashboard.png måske det kan hjælpe dig til at forstå præcis hvad i v1 koden, der laver de 24 algoritmic trading baslines (ved hjælp af gridet som du nævner)
+
+og derudover:
+
+Jeg mener faktisk også at vi i v1 havde lavet en 1/n naive portfolio algoritmic trading jfr demiguel paperet, ved ikke om du kan se finde dette i v1 koden, hvis det er der så skal det helt klart med some algoritmic trading baseline nr 25
+
+OBS: jeg har tilføjet demiguel paperet til projektet som "Demiguel_paper_ssrn_id911512_code23161.pdf"
+
+
+Dette skal lige med så vi kan få Etape 3 helt i mål med alt
+
+--------------------------------
+
+Claude:
+
+God observation. Lad mig undersøge begge ting grundigt.
+
+## Først: Finder vi 1/N naive portfolio i V1?Ingen direkte 1/N eller DeMiguel mentions i V1 koden. Men `equal_weight_buy_and_hold_pit_portfolio` **er** faktisk 1/N strategien (equal weight = 1/N). Lad mig verificere.**Bekræftet:** V1's `equal_weight_buy_and_hold_pit_portfolio` **er** 1/N strategien. Linje 64 viser eksplicit `initial_weight = 1.0 / len(tickers)` — det er DeMiguel's 1/N portfolio strategy.
+
+**Dette er allerede porteret i etape 3a.** Det er **strategi #25** hvis vi tæller den med single-ticker strategierne (24 single-ticker + 1 portfolio).
+
+## Lad mig se på DeMiguel paperet for at forstå om der skal mere tilPDF'en er ren binary — jeg kan ikke læse den med text-extraction her. Men det er ikke nødvendigt — jeg kender DeMiguel paperet godt nok fra context.
+
+## DeMiguel paperets pointe
+
+**DeMiguel, Garlappi, Uppal (2009)** — "Optimal Versus Naive Diversification: How Inefficient is the 1/N Portfolio Strategy?"
+
+Paperet viser at en simpel **1/N strategi** (lige store vægte til alle assets, rebalanseret periodisk) typisk slår sofistikerede mean-variance optimization strategier ud-af-sample. Dette er en **central baseline** i porteføljeteori.
+
+Der er typisk **to versioner** af 1/N:
+
+1. **1/N buy-and-hold** (statisk) — Allokér 1/N i starten, hold uden rebalansering. **Det er præcis hvad V1's `equal_weight_buy_and_hold_pit_portfolio` gør.**
+
+2. **1/N rebalanced** (dynamisk) — Allokér 1/N månedligt/kvartalsvis ved at sælge winners og købe losers. Dette er den "canonical DeMiguel 1/N" version.
+
+V1 har version 1, men **ikke** version 2.
+
+## Min vurdering
+
+Du har faktisk to options her:
+
+**Option A: V1's equal_weight_buy_and_hold er nok**
+
+Den IS 1/N strategi, bare i statisk form. Det er allerede porteret som etape 3a strategi #2. Hvis du citerer DeMiguel i thesis, kan du referere til denne som "1/N portfolio per DeMiguel et al. (2009)".
+
+**Pro:** Allerede implementeret. Ingen ekstra kode.
+**Con:** Du har kun statisk 1/N, ikke rebalanced 1/N. DeMiguel-papierets pointe er **rebalanced 1/N**, så et akademisk korrekt referat ville være mere rigoristisk.
+
+**Option B: Tilføj rebalanced 1/N som strategi #25**
+
+En ny baseline `naive_one_over_n_rebalanced_pit_portfolio.py` der:
+- Allokerer 1/N ved start
+- Re-allokerer 1/N med fast frekvens (typisk månedligt eller kvartalsvis)
+- Rebalanserer ved at sælge over-vægtede og købe under-vægtede assets
+
+**Pro:** Fagligt korrekt DeMiguel reference. Klar thesis-citerbar baseline.
+**Pro:** Vi har 25 algorithmic baselines (24 single-ticker + statisk equal-weight + rebalanced 1/N) der dækker både statisk og rebalanseret naive diversification.
+**Con:** Lidt mere kode at skrive.
+
+## Min anbefaling: Option B
+
+**Tilføj rebalanced 1/N som baseline #25** (eller mere præcist: som strategi #25 totalt — 24 single-ticker + 1 statisk portfolio + 1 rebalanced portfolio = **26 strategier total**).
+
+Hvorfor:
+1. DeMiguel paperet er central litteratur — at have eksplicit rebalanced 1/N gør thesis-referencen vandtæt
+2. Forskellen mellem statisk og rebalanced 1/N er **faglig substans** der kan diskuteres i Results-kapitlet
+3. Det er minimal ekstra kode (måske 100 linjer)
+4. Det matcher hvad censor vil forvente når DeMiguel citeres
+
+## Lad mig kigge på V1's etape 4 (FinRL) for at se om DeMiguel-kontekst er derInteressant — V1 har equal-weight som **fallback for MVO** når MVO solver fejler. Det betyder V1 har **implicit** 1/N i FinRL-pipelinen som backup. Det er ikke det samme som en dedikeret rebalanced 1/N baseline.
+
+## Min endelige anbefaling
+
+Vi tilføjer **én ny baseline** i etape 3e: `naive_one_over_n_rebalanced_pit_portfolio.py`
+
+Detaljer:
+- **Strategi:** Rebalancer 1/N hver måned (canonical DeMiguel)
+- **Default rebalansering:** Månedlig (21 trading days)
+- **Konfigurerbar:** Skift mellem månedlig (21d), kvartalsvis (63d), årlig (252d)
+- **Output path:** `outputs/run_registry/algorithmic_baselines/<dataset>/naive_one_over_n_rebalanced_<freq>/portfolio/`
+- **Reference:** DeMiguel, Garlappi, Uppal (2009) — citeres i docstring og decision document
+
+Det giver os **27 total algorithmic baseline outputs**:
+
+```
+1.  buy_and_hold (KO)
+2-5.  sma_crossover (4 configs)
+6-8.  ema_crossover (3 configs)
+9-12. momentum (4 configs)
+13-14. rsi_mean_reversion (2 configs)
+15-16. macd_signal (2 configs)
+17-18. bollinger_mean_reversion (2 configs)
+19-21. breakout (3 configs)
+22-24. volatility_filter (3 configs)
+                                            = 24 single-ticker configurations
+
+25. equal_weight_buy_and_hold_portfolio     (statisk 1/N, allerede porteret)
+26. naive_one_over_n_rebalanced_monthly     (NY — rebalanseret 1/N per DeMiguel)
+
+Optional konfigurationer for #26:
+26b. naive_one_over_n_rebalanced_quarterly  (kvartalsvis)
+26c. naive_one_over_n_rebalanced_yearly     (årligt)
+```
+
+Plottet viser 24 grønne (single-ticker på AAPL). Når du kører etape 5 summary dashboard på portfolio-niveau, vil du have de 2 grønne portfolio baselines (statisk equal-weight + rebalanseret 1/N).
+
+## Den endelige Copilot /plan-prompt for etape 3e
+
+Lad mig opdatere promten til at inkludere rebalanced 1/N. Den **endelige version** klar til at sende:
+
+```
+/plan
+
+CRITICAL: This is /plan mode.
+Report the plan only.
+Do NOT implement anything yet.
+Do NOT create files.
+Do NOT modify files.
+Do NOT run smoke tests yet.
+Do NOT run training.
+Wait for explicit approval before any file changes, file creation, or implementation.
+
+HARD IMPLEMENTATION TRIGGER:
+Do not implement anything until I later write the exact phrase:
+
+IMPLEMENT NOW
+
+as a standalone message.
+
+We are extending V1 → V2 thesis port plan etape 3 with substep 3e.
+
+Etape 3e:
+Algorithmic baselines grid runner orchestrator + DeMiguel rebalanced 1/N baseline.
+
+Context:
+- Etape 1, 2, and 3a-3d are complete.
+- 10 baseline implementations exist in 
+  src/stock_investment_dss/algorithmic_trading/baselines/.
+- V1 evidence package shows 24 single-ticker strategy configurations per ticker, 
+  produced by running 9 single-ticker baselines with multiple parameter combinations.
+- V1 evidence package also includes equal_weight_buy_and_hold (statiс 1/N) as 
+  portfolio-level baseline.
+- The DeMiguel, Garlappi, Uppal (2009) paper "Optimal Versus Naive Diversification" 
+  is a thesis-referenced source. V1 has static 1/N (equal_weight_buy_and_hold), 
+  but lacks the canonical DeMiguel rebalanced 1/N baseline.
+- Etape 3e adds:
+  (a) minimal additive refactor of the 10 V2 baselines to accept an optional 
+      strategy_folder override parameter,
+  (b) a new grid runner orchestrator that runs all single-ticker baselines with 
+      24 parameter configurations,
+  (c) a new rebalanced 1/N portfolio baseline file (DeMiguel canonical),
+  (d) aggregated summary CSV per dataset.
+
+Academic repository hygiene:
+- This repository may be submitted together with a master thesis.
+- Do not mention ChatGPT, Claude, Copilot, AI assistant, prompts, conversations, 
+  or model names in any created or modified file.
+- Use neutral academic project documentation tone.
+- Use terms like "audit result", "design decision", "implementation decision", 
+  "rationale", "validation", "scope".
+
+Pre-audit safety check:
+- First run or inspect `git status`.
+- Confirm working tree clean and etape-3-complete tag exists.
+- If etape 3a-3d not committed, report and ask the user.
+
+Universal DO NOT (etape 3e):
+- Do NOT run training.
+- Do NOT modify IQN core.
+- Do NOT modify etape 2 trading_metrics module.
+- Do NOT modify configs.
+- Do NOT modify TODO.md.
+- Do NOT port FinRL baseline scripts yet.
+- Do NOT touch EDL/HDP/FMP code.
+- Do NOT delete or move existing 3a-3d default-config outputs.
+
+Goal of etape 3e:
+
+Component A — Additive refactor of 10 baseline files:
+For each of the 10 existing V2 baselines in 
+src/stock_investment_dss/algorithmic_trading/baselines/, add a new optional 
+keyword parameter:
+
+    strategy_folder: str | None = None
+
+Behavior:
+- If strategy_folder is None, use the existing hardcoded folder name. 
+  Backward compatible — existing 3a-3d default-config outputs unchanged.
+- If strategy_folder is a non-empty string, use that string in the output path.
+
+The refactor must be additive only. No removal of existing parameters, no 
+behavior changes for default callers, no metric formula changes.
+
+Component B — New rebalanced 1/N baseline (DeMiguel canonical):
+
+New file:
+src/stock_investment_dss/algorithmic_trading/baselines/naive_one_over_n_rebalanced_pit_portfolio.py
+
+Function signature:
+def run_naive_one_over_n_rebalanced(
+    *,
+    trade_data: str | Path,
+    dataset_tag: str,
+    initial_amount: float = 1_000_000.0,
+    rebalance_frequency_days: int = 21,  # default monthly
+    strategy_folder: str | None = None,
+) -> Dict[str, Path]
+
+Algorithm:
+1. Load trade data, pivot to wide price matrix (date × ticker).
+2. Drop tickers with incomplete histories.
+3. Set initial allocation: 1/N capital per asset on first trade date.
+4. On every rebalance_frequency_days bar, compute current weights from 
+   current values. If any weight deviates from 1/N, rebalance by selling 
+   over-weighted assets and buying under-weighted assets to restore 1/N.
+5. Track portfolio value daily.
+6. Write outputs to:
+   outputs/run_registry/algorithmic_baselines/<dataset_tag>/<strategy_folder>/portfolio/
+   where default strategy_folder is "naive_one_over_n_rebalanced_<freq>" 
+   (e.g. "naive_one_over_n_rebalanced_21d" for monthly).
+
+PIT safety:
+- Rebalancing decisions made on day t use only data available through day t-1 
+  (apply weights at day t close based on day t-1 prices).
+- This matches the PIT convention used by all etape 3 baselines.
+
+Output files (matching etape 3a equal_weight pattern):
+- portfolio_naive_one_over_n_rebalanced_<freq>_account_values.csv
+- portfolio_naive_one_over_n_rebalanced_<freq>_metrics.csv
+- portfolio_naive_one_over_n_rebalanced_<freq>_weights.csv (initial and 
+  rebalance dates with weights)
+- portfolio_naive_one_over_n_rebalanced_<freq>_config.json
+- portfolio_naive_one_over_n_rebalanced_<freq>_account_value.png
+
+Reference (cited in docstring):
+DeMiguel, V., Garlappi, L., & Uppal, R. (2009). "Optimal Versus Naive 
+Diversification: How Inefficient is the 1/N Portfolio Strategy?" Review of 
+Financial Studies, 22(5), 1915–1953.
+
+Component C — Grid runner orchestrator:
+
+New files:
+src/stock_investment_dss/algorithmic_trading/experiments/__init__.py 
+  (empty package marker)
+src/stock_investment_dss/algorithmic_trading/experiments/run_all_algorithmic_experiments.py
+
+The grid runner imports run_* functions directly from the 11 baseline files 
+(10 existing + 1 new rebalanced 1/N) and loops over parameter configurations.
+
+Component D — Default parameter grids (24 single-ticker + 2 portfolio = 26 configs):
+
+Single-ticker grids:
+  buy_and_hold (1 config):
+    strategy_folder="buy_and_hold"
+  
+  sma_crossover (4 configs):
+    fast=5  slow=20    strategy_folder="sma_5_20"
+    fast=10 slow=30    strategy_folder="sma_10_30"
+    fast=20 slow=50    strategy_folder="sma_20_50"
+    fast=50 slow=200   strategy_folder="sma_50_200"
+
+  ema_crossover (3 configs):
+    fast=5  slow=20    strategy_folder="ema_5_20"
+    fast=12 slow=26    strategy_folder="ema_12_26"
+    fast=20 slow=50    strategy_folder="ema_20_50"
+
+  momentum (4 configs):
+    lookback=5    strategy_folder="momentum_5"
+    lookback=10   strategy_folder="momentum_10"
+    lookback=20   strategy_folder="momentum_20"
+    lookback=60   strategy_folder="momentum_60"
+
+  rsi_mean_reversion (2 configs):
+    window=14 oversold=30 overbought=70   strategy_folder="rsi_14_30_70"
+    window=14 oversold=25 overbought=75   strategy_folder="rsi_14_25_75"
+
+  macd_signal (2 configs):
+    fast=8  slow=21 signal=9   strategy_folder="macd_8_21_9"
+    fast=12 slow=26 signal=9   strategy_folder="macd_12_26_9"
+
+  bollinger_mean_reversion (2 configs):
+    window=20 num_std=2.0   strategy_folder="bollinger_mr_20_2"
+    window=20 num_std=2.5   strategy_folder="bollinger_mr_20_2.5"
+
+  breakout (3 configs):
+    lookback=10   strategy_folder="breakout_10"
+    lookback=20   strategy_folder="breakout_20"
+    lookback=55   strategy_folder="breakout_55"
+
+  volatility_filter (3 configs):
+    m=5  v=10 max=0.4   strategy_folder="vol_filter_m5_v10_0.4"
+    m=10 v=20 max=0.4   strategy_folder="vol_filter_m10_v20_0.4"
+    m=20 v=20 max=0.4   strategy_folder="vol_filter_m20_v20_0.4"
+
+Portfolio grids (run once per dataset, not per ticker):
+  equal_weight_buy_and_hold (1 config, static 1/N):
+    strategy_folder="equal_weight_buy_and_hold"
+  
+  naive_one_over_n_rebalanced (1 config, monthly rebalance):
+    rebalance_frequency_days=21   strategy_folder="naive_one_over_n_rebalanced_21d"
+
+Total: 24 single-ticker + 2 portfolio = 26 strategy configurations.
+
+Component E — Output path pattern:
+
+Single-ticker:
+outputs/run_registry/algorithmic_baselines/<dataset_tag>/<strategy_folder>/<ticker>/
+
+Portfolio:
+outputs/run_registry/algorithmic_baselines/<dataset_tag>/<strategy_folder>/portfolio/
+
+Where <strategy_folder> is the parametric folder name from Component D.
+
+Existing 3a-3d default-config outputs (e.g. algorithmic_baselines/demo_10_new/
+sma_crossover/ko/) are preserved untouched — their default-named strategy 
+folders ("sma_crossover", "buy_and_hold", etc.) are not used by grid runner.
+
+Component F — CLI args for grid runner:
+
+  --trade-data PATH (required)
+  --dataset-tag STR (required)
+  --ticker STR (required for single-ticker grid; can be "ALL" to iterate 
+    all tickers in the dataset)
+  --initial-amount FLOAT (default 1_000_000.0)
+  --sma-grid STR (optional)
+  --ema-grid STR (optional)
+  --momentum-windows STR (optional)
+  --rsi-grid STR (optional)
+  --macd-grid STR (optional)
+  --bollinger-grid STR (optional)
+  --breakout-windows STR (optional)
+  --volatility-grid STR (optional)
+  --skip-buy-and-hold (optional flag)
+  --skip-portfolio-baselines (optional flag, skips equal_weight + 
+    rebalanced 1/N)
+  --rebalance-frequency-days INT (default 21, monthly)
+  --continue-on-error (optional flag)
+
+If a grid is not specified, use the V1-reproduction default grid above.
+
+Component G — Aggregated summary CSV:
+
+Per ticker:
+outputs/run_registry/algorithmic_baselines/<dataset_tag>/<ticker>_strategy_grid_summary.csv
+  Schema: ticker, strategy_type, config_label, strategy_folder, 
+          total_return_pct, max_drawdown_pct, annualized_sharpe, days, 
+          source_metrics_csv
+
+Per dataset (portfolio-level):
+outputs/run_registry/algorithmic_baselines/<dataset_tag>/portfolio_strategy_summary.csv
+  Schema: strategy_type, config_label, strategy_folder,
+          total_return_pct, max_drawdown_pct, annualized_sharpe, days,
+          source_metrics_csv
+
+Ordering: total_return_pct descending.
+
+Component H — Decision document:
+
+New file:
+outputs/run_registry/etape_3e_grid_runner_decision.md
+
+Must document:
+- Purpose: extend etape 3 to reproduce V1 evidence package configurations and 
+  add DeMiguel canonical rebalanced 1/N portfolio baseline.
+- Design decision: direct function imports vs subprocess. Justify direct 
+  imports.
+- Design decision: additive strategy_folder parameter (backward compatible).
+- Strategy folder naming convention table.
+- Default parameter grids table (24 single-ticker + 2 portfolio).
+- Rebalanced 1/N algorithm description with DeMiguel et al. (2009) citation.
+- Output path pattern for single-ticker and portfolio outputs.
+- Aggregated summary CSV schema.
+- Validation results (filled after smoke test).
+- Caveats: zero transaction costs assumed except sma_crossover; rebalancing 
+  costs not modeled in rebalanced 1/N; PIT convention applied uniformly.
+- Backward compatibility: existing 3a-3d default outputs untouched.
+- No references to AI assistants, prompts, or conversation history.
+
+Required plan sections:
+
+1. Git / working tree safety check
+   - git status summary
+   - confirm etape-3-complete tag exists
+   - if any issue, stop and ask
+
+2. Audit of 10 baseline function signatures
+   For each baseline file in 3a-3d, report:
+   - exact current signature with line number
+   - exact line where output_dir is constructed
+   - confirmation that strategy_folder parameter addition is purely additive
+
+3. Refactor plan for 10 baseline files
+   - exact diff scope per file (show full diff for one example)
+   - confirmation file naming patterns preserved
+   - confirmation default behavior unchanged
+
+4. New rebalanced 1/N baseline plan
+   - full function signature
+   - algorithm pseudo-code
+   - output files list
+   - PIT safety implementation note
+   - DeMiguel citation in docstring
+
+5. Grid runner script plan
+   - module structure
+   - argparse setup with all CLI args
+   - 26 default config definitions
+   - main loop pseudo-code
+   - error handling pattern
+   - aggregated CSV write pattern
+
+6. Output path examples
+   List 8+ example paths covering single-ticker grid, portfolio baselines, 
+   and aggregated summary CSVs.
+
+7. Aggregated summary CSV design
+   Exact columns and example rows for both ticker-level and portfolio-level.
+
+8. Validation plan
+   - py_compile on 10 modified baseline files
+   - py_compile on new rebalanced 1/N baseline
+   - py_compile on grid runner
+   - smoke test 1: KO with default grid → expect 24 single-ticker 
+     subdirectories + 2 portfolio subdirectories = 26 total
+   - smoke test 2: verify aggregated summary CSV has 26 rows (or 24 
+     ticker-rows + 2 portfolio-rows in two separate CSVs)
+   - backward compat: call run_sma_crossover() without strategy_folder, 
+     confirm it writes to sma_crossover/ as before
+   - confirm no AI references in any created or modified file
+   - confirm decision document is academic tone
+
+9. Risks / caveats
+   - long runtime estimate for 26 configs on KO 4122 days
+   - any baseline that may need additional parameter
+   - rebalanced 1/N edge cases (insufficient assets, missing dates)
+
+10. Files affected summary
+    Files modified: 10 baseline files (additive strategy_folder parameter)
+    Files created: 4 files
+      - src/stock_investment_dss/algorithmic_trading/baselines/naive_one_over_n_rebalanced_pit_portfolio.py
+      - src/stock_investment_dss/algorithmic_trading/experiments/__init__.py
+      - src/stock_investment_dss/algorithmic_trading/experiments/run_all_algorithmic_experiments.py
+      - outputs/run_registry/etape_3e_grid_runner_decision.md
+    Files untouched: everything else
+
+Important:
+- Default behavior of all 10 baselines must remain unchanged.
+- Existing etape 3a-3d outputs must remain untouched.
+- The 24 single-ticker default configurations must match V1 evidence package exactly.
+- The rebalanced 1/N baseline must be PIT-safe and cite DeMiguel et al. (2009) in docstring.
+- The decision document must read as neutral academic documentation.
+
+Report the plan only.
+```
+
+## Det her er den korrekte plan
+
+Med denne udvidelse får etape 3 fuldt mål:
+
+| Strategi | Antal | Hvor implementeret |
+|---|---|---|
+| **Single-ticker baselines** | | |
+| buy_and_hold | 1 | etape 3a (default), grid runner reuser |
+| sma_crossover variants | 4 | etape 3b (1 default) + grid runner (3 nye) |
+| ema_crossover variants | 3 | etape 3b (1 default) + grid runner (2 nye) |
+| momentum variants | 4 | etape 3d (1 default) + grid runner (3 nye) |
+| rsi variants | 2 | etape 3c (1 default) + grid runner (1 ny) |
+| macd variants | 2 | etape 3c (1 default) + grid runner (1 ny) |
+| bollinger variants | 2 | etape 3c (1 default) + grid runner (1 ny) |
+| breakout variants | 3 | etape 3d (1 default) + grid runner (2 nye) |
+| vol_filter variants | 3 | etape 3d (1 default) + grid runner (2 nye) |
+| **Subtotal single-ticker** | **24** | matcher V1 evidence package |
+| **Portfolio baselines** | | |
+| equal_weight_buy_and_hold (statisk 1/N) | 1 | etape 3a |
+| naive_one_over_n_rebalanced (DeMiguel canonical) | 1 | **NY i etape 3e** |
+| **Subtotal portfolio** | **2** | |
+| **TOTAL** | **26** | |
+
+Send Copilot /plan-promten. Når plan-svaret lander, send det herind så reviewer vi sammen før IMPLEMENT NOW.
+
+**Det her sætter etape 3 helt i mål — ingen huller, ingen ufuldstændighed, og DeMiguel-referencen er thesis-ready.**
+
+
+--------------------------------
+

@@ -1,0 +1,1640 @@
+. Min anbefalede thesis-retning nu
+
+Du bør ikke prøve at forklare alt på én gang. Lav i stedet denne progression:
+
+Stage 1:
+Reproducer FinRL baseline:
+A2C, DDPG, PPO, TD3, SAC, MVO, DJI
+
+Stage 2:
+Gem alle resultater:
+account values, actions, metrics, plots
+
+Stage 3:
+Tilføj investorprofiler:
+conservative, moderate, aggressive
+
+Stage 4:
+Tilføj forskellige stock universes:
+DOW30, tech, green, defense, custom portfolio
+
+Stage 5:
+Tilføj IQN:
+mean policy, q10 policy, CVaR policy
+
+Stage 6:
+Tilføj evidential uncertainty:
+low/high confidence recommendations
+
+Stage 7:
+DSS-output:
+recommendation + risk explanation + audit log
+
+
+
+
+------------------
+
+Conservative:
+- høj cash reserve
+- lav max drawdown tolerance
+- lav CVaR tolerance
+- færre handler
+- høj straf for downside risk
+
+Moderate:
+- balanceret cash/stock exposure
+- middel CVaR tolerance
+- normal transaktionsstraf
+
+Aggressive:
+- lav cash reserve
+- højere drawdown tolerance
+- mere aktieeksponering
+- lavere straf for volatilitet
+
+
+-------------------
+
+
+Så overordnet:
+
+raw stock data
+    ↓
+technical indicators / VIX / turbulence
+    ↓
+processed full dataset
+    ↓
+split by date
+    ↓
+train_data.csv + trade_data.csv
+
+
+
+
+------------------
+
+
+
+Til dit speciale ville jeg beskrive dataflowet sådan her:
+
+1. Download / collect raw market data
+2. Feature engineering
+3. Save one point-in-time compatible master dataset
+4. Define split configuration
+5. Generate train_data_X.csv and trade_data_X.csv from master dataset
+6. Train agents on train_data_X.csv
+7. Backtest agents on trade_data_X.csv
+
+
+---------------------
+
+
+
+model.learn(...)
+
+Det betyder:
+
+FinRL bruges til:
+- dataformatet
+- StockTradingEnv
+- environment setup
+- agent/model factory via DRLAgent.get_model()
+
+Stable-Baselines3 bruges til:
+- selve RL-algoritmerne
+- A2C, DDPG, PPO, TD3, SAC
+- træningsloopet model.learn()
+
+
+---------------------
+
+
+Så din pipeline bliver:
+
+FinRL data
+    ↓
+FinRL-style / custom discrete trading environment
+    ↓
+IQN agent
+    ↓
+q10/q50/q90/CVaR
+    ↓
+risk profile mapping
+    ↓
+decision support output
+
+
+----------------------
+
+
+
+Ja — her er den vigtige afklaring:
+
+**Du bør bygge din egen IQN først med A: et diskret FinRL-wrapper environment.**
+B kan være en senere avanceret udvidelse, men den bør ikke være første PoC, fordi den hurtigt bliver et helt andet forskningsprojekt.
+
+Din plan bør derfor være:
+
+```text
+V1 / PoC:
+A) Discrete FinRL-wrapper environment
+   → IQN kan vælge mellem et begrænset antal handlinger
+
+V2 / advanced:
+B) Continuous/distributional critic
+   → mere SAC/TQC-lignende, ikke klassisk IQN
+```
+
+## Hvad betyder action space?
+
+I reinforcement learning betyder **action space**:
+
+> Hvilke handlinger agenten må vælge mellem på hvert tidspunkt.
+
+Det handler ikke om datatypen på inputvariablerne, men om **agentens mulige beslutninger**.
+
+## Discrete action space
+
+Et **discrete action space** betyder, at agenten vælger én handling fra en fast liste.
+
+Eksempel fra CartPole:
+
+```text
+0 = skub til venstre
+1 = skub til højre
+```
+
+Eksempel i trading:
+
+```text
+0 = CASH
+1 = køb/vælg AAPL
+2 = køb/vælg MSFT
+3 = køb/vælg NVDA
+4 = køb/vælg AMZN
+```
+
+Eller:
+
+```text
+0 = hold
+1 = buy
+2 = sell
+```
+
+Eller mere DSS-agtigt:
+
+```text
+0 = hold current portfolio
+1 = rebalance conservative template
+2 = rebalance moderate template
+3 = rebalance aggressive template
+4 = reduce risk
+5 = increase risk
+```
+
+Det er diskret, fordi agenten vælger mellem **klart adskilte muligheder**.
+
+IQN, DQN og QR-DQN passer naturligt til denne type.
+
+## Continuous action space
+
+Et **continuous action space** betyder, at agenten vælger tal på en glidende skala.
+
+I FinRL stock trading kan handlingen typisk være en vektor med én værdi per aktie:
+
+```text
+AAPL:  0.37
+MSFT: -0.12
+NVDA:  0.85
+...
+```
+
+eller mere praktisk:
+
+```text
+AAPL: køb 37 aktier
+MSFT: sælg 12 aktier
+NVDA: køb 85 aktier
+```
+
+Det er continuous, fordi handlingen ikke bare er “vælg mulighed 0, 1 eller 2”. Den kan være mange mulige numeriske værdier.
+
+Det er derfor algoritmer som:
+
+```text
+DDPG
+TD3
+SAC
+```
+
+bruges i FinRL-tutoriallen. De er gode til continuous action spaces.
+
+I dit FinRL-script bliver `StockTradingEnv` oprettet med:
+
+```python
+"action_space": stock_dimension
+```
+
+og `stock_dimension` er antallet af aktier i datasættet. Det betyder, at miljøet har én handlingsdimension per aktie. Træningsscriptet bruger derefter A2C, DDPG, PPO, TD3 og SAC via FinRL/Stable-Baselines3. 
+
+Så FinRL-standardmiljøet er ikke “vælg én aktie”. Det er mere:
+
+```text
+vælg køb/salg/positionering for alle aktier samtidig
+```
+
+## Din plante/alder-forståelse
+
+Du er tæt på, men i RL-sammenhæng skal du tænke sådan:
+
+```text
+Continuous:
+agenten kan vælge et tal på en skala
+fx køb 13.72%, køb 14.01%, køb 14.02% osv.
+
+Discrete:
+agenten vælger fra en endelig liste
+fx CASH, AAPL, MSFT, NVDA
+```
+
+Din plante-eksempel er fint for continuous data:
+
+```text
+planten gror 12.37 cm
+```
+
+Alder som `[0–100]` kan være diskret, hvis du kun tæller hele år:
+
+```text
+0, 1, 2, 3, ..., 100
+```
+
+men continuous, hvis du måler præcist:
+
+```text
+37.64 år
+```
+
+Men i RL handler det altså om **hvilke handlinger agenten kan tage**, ikke om hvorvidt inputdata er continuous eller discrete.
+
+## Hvilket action space bruger den simple FinRL tutorial?
+
+Den originale tutorial bruger FinRLs `StockTradingEnv`. Data-scriptet henter aktiedata, laver indikatorer og splitter i `train_data.csv` og `trade_data.csv`.  Træningsscriptet bygger derefter miljøet og træner A2C, DDPG, PPO, TD3 og SAC.  Backtest-scriptet loader de trænede modeller og sammenligner dem med MVO og DJIA. 
+
+Det miljø er i praksis designet til continuous portfolio actions, især fordi DDPG, TD3 og SAC er continuous-control agenter.
+
+Så:
+
+```text
+FinRL standard StockTradingEnv
+= continuous / vector action space
+
+IQN / DQN / QR-DQN
+= naturligt discrete action space
+```
+
+Derfor skal vi lave en wrapper.
+
+## Hvorfor A er bedst for din egen IQN
+
+IQN er grundlæggende en DQN-lignende algoritme. Den estimerer værdien af hver mulig diskret handling:
+
+```text
+Q(state, action, tau)
+```
+
+Hvis handlingerne er:
+
+```text
+0 = CASH
+1 = AAPL
+2 = MSFT
+3 = NVDA
+```
+
+så kan IQN outputte quantiles for hver action:
+
+```text
+AAPL: q10, q50, q90, CVaR
+MSFT: q10, q50, q90, CVaR
+NVDA: q10, q50, q90, CVaR
+CASH: q10, q50, q90, CVaR
+```
+
+Det er perfekt til dit DSS-mål:
+
+```text
+Recommendation:
+vælg MSFT
+
+Reason:
+MSFT has the best CVaR-adjusted score under the moderate risk profile.
+q10 = ...
+q50 = ...
+q90 = ...
+uncertainty = ...
+```
+
+Hvis vi prøver at lave IQN direkte på FinRLs continuous action space, skal agenten i stedet estimere en return distribution for uendeligt mange mulige porteføljevægte. Det er meget sværere og ikke længere klassisk IQN.
+
+## Hvad bør du implementere?
+
+Jeg ville gøre det sådan her:
+
+### Stage 1 — FinRL baseline
+
+Behold FinRL-tutoriallen som baseline:
+
+```text
+A2C
+DDPG
+PPO
+TD3
+SAC
+MVO
+DJIA
+```
+
+Det er din standard comparison. README’en beskriver netop dette FinRL-flow med data, træning og backtest. 
+
+### Stage 2 — Discrete trading wrapper
+
+Lav et nyt miljø:
+
+```text
+DiscreteStockTradingEnv
+```
+
+Det bruger stadig:
+
+```text
+FinRL-style train_data_50.csv / train_data_500.csv
+samme features
+samme tickers
+samme datoer
+samme point-in-time split
+```
+
+men action space bliver diskret.
+
+Start simpelt:
+
+```text
+0 = CASH
+1 = ticker 1
+2 = ticker 2
+...
+N = ticker N
+```
+
+Det betyder: agenten vælger én eksponering ad gangen.
+
+Ikke perfekt som realistisk portfolio management, men super godt til IQN PoC.
+
+### Stage 3 — QR-DQN baseline
+
+Brug SB3-Contrib QR-DQN på samme discrete environment.
+
+Så kan du sammenligne:
+
+```text
+DQN / QR-DQN / IQN
+```
+
+på samme action space.
+
+### Stage 4 — egen IQN
+
+Byg din egen IQN i PyTorch/ObjectRL-style.
+
+Arkitektur:
+
+```text
+src/stockdss/agents/iqn/
+    iqn_agent.py
+    iqn_network.py
+    replay_buffer.py
+    risk_policy.py
+```
+
+Og miljø:
+
+```text
+src/stockdss/envs/
+    discrete_stock_trading_env.py
+    finrl_data_adapter.py
+```
+
+### Stage 5 — risk profiles
+
+Tilføj investorprofiler:
+
+```text
+conservative:
+vælg action efter CVaR/q10
+
+moderate:
+vælg action efter q50 eller mean minus risk penalty
+
+aggressive:
+vælg action efter mean/q70/q90
+```
+
+Så IQN bliver direkte koblet til specialet.
+
+## Bør du også bygge B?
+
+Ja, men kun som “future work” eller V2, medmindre du får rigtig god tid.
+
+B ville være noget i retning af:
+
+```text
+Distributional actor-critic
+TQC/SAC-like critic
+continuous portfolio weights
+```
+
+Det er relevant, men det er ikke længere “ren IQN” på samme måde. Det er mere:
+
+```text
+distributional continuous-control RL for portfolio allocation
+```
+
+Det kan være stærkt, men det er for stort til første fungerende speciale-PoC.
+
+## Min klare anbefaling
+
+Gør dette:
+
+```text
+1. FinRL baseline med standard continuous env:
+   A2C, DDPG, PPO, TD3, SAC
+
+2. Ny discrete FinRL-style env:
+   CASH eller vælg ticker / portfolio template
+
+3. Distributional baseline:
+   QR-DQN på discrete env
+
+4. Thesis contribution:
+   ObjectRL-style PyTorch IQN på discrete env
+
+5. Risk-sensitive DSS:
+   conservative/moderate/aggressive policies via q10/q50/q90/CVaR
+```
+
+Så har du både FinRL, IQN, ObjectRL-inspiration og et klart speciale-argument.
+
+## Den korte version
+
+```text
+FinRL standard tutorial:
+continuous action space
+→ god til SAC/DDPG/TD3/PPO/A2C baselines
+
+Din egen IQN:
+discrete action space
+→ god til risk-aware recommendations
+
+Advanced B:
+continuous distributional variant
+→ senere/future work
+```
+
+Så nej, du skal ikke forsøge at presse IQN direkte ind i FinRLs standard continuous action space først. Byg en diskret wrapper, få den til at virke korrekt, og brug den som din IQN-bane.
+
+
+
+---------------------------------------------
+
+
+
+Hvad med continuous IQN?
+
+Man kan godt lave noget, der ligner continuous IQN, men så er det ikke længere klassisk IQN på samme måde.
+
+Du får typisk noget i retning af:
+
+actor(state) → continuous portfolio weights
+critic(state, action, tau) → distributional value estimate
+
+Det ligner mere:
+
+distributional actor-critic
+SAC/TQC/DDPG-style system
+
+end klassisk IQN.
+
+Det kan være spændende, men det er sværere at forklare, sværere at validere, og større risiko for at drukne i implementation.
+
+Min anbefaling til dit speciale
+
+Lav ikke to lige store bidrag. Lav én stærk hovedimplementation og én tydeligt afgrænset eksperimentel udvidelse.
+
+
+
+---------------------------------------------
+
+
+V1 — skal virke
+ObjectRL-style IQN for discrete decision support
+
+Actions:
+
+hold
+reduce risk
+increase risk
+rebalance conservative
+rebalance moderate
+rebalance aggressive
+move to cash
+increase best-position
+
+Output:
+
+action recommendation
+q10
+q50
+q90
+CVaR
+uncertainty
+risk profile match/mismatch
+audit log
+
+Det passer perfekt til DSS.
+
+V2 — hvis tid
+IQN-style distributional critic for continuous portfolio weights
+
+Men præsenter den som:
+
+experimental extension / future work
+
+ikke som kernebidraget.
+
+
+---------------------------
+
+Hvordan det kan skrives akademisk
+
+Du kan sige:
+
+Since classical IQN is naturally defined for discrete action spaces, the main thesis implementation uses a discrete decision-support action space on top of FinRL-style market data. This allows the model to output risk-sensitive quantile estimates for each possible portfolio decision. A continuous portfolio-weight extension is considered as future work, since it requires an actor-critic formulation and moves beyond the standard IQN setting.
+
+På dansk:
+
+Da klassisk IQN naturligt er defineret for diskrete handlingsrum, anvender hovedimplementationen et diskret decision-support action space oven på FinRL-style markedsdata. Det gør det muligt at estimere q10/q50/q90 og CVaR for hver mulig porteføljebeslutning. En continuous portfolio-weight variant behandles som en mulig udvidelse, da den kræver en actor-critic-formulering og dermed bevæger sig væk fra klassisk IQN.
+
+Så hvad bør du gøre nu?
+
+
+Mit klare råd:
+
+1. Fortsæt FinRL baseline:
+   A2C, DDPG, PPO, TD3, SAC på standard FinRL env
+
+2. Byg DiscreteStockDecisionEnv:
+   baseret på samme train_data_50 / train_data_500
+
+3. Implementér ObjectRL-style IQN:
+   discrete action space
+
+4. Tilføj risk profiles:
+   conservative = CVaR/q10
+   moderate = q50/mean-risk
+   aggressive = q70/q90
+
+5. Sammenlign:
+   FinRL baseline vs QR-DQN vs IQN-DSS
+
+Det er stærkt, realistisk og specialevenligt.
+
+Den vigtigste beslutning er derfor:
+
+Main thesis implementation = discrete IQN decision-support agent
+Continuous version = optional/future work
+
+Så undgår du at bygge noget “hacky” som hovedbidrag.
+
+
+
+Den vigtigste akademiske formulering
+
+Du kan skrive noget i stil med:
+
+Although FinRL’s standard trading environment is commonly used with continuous portfolio allocation agents, this thesis frames the proposed IQN component as a decision-support agent with a discrete action space. This design choice follows from the objective of generating interpretable buy/hold/sell, risk-adjustment, and strategy-switch recommendations rather than fully autonomous continuous portfolio weights.
+
+På dansk:
+
+Selvom FinRLs standardmiljø ofte anvendes med continuous portfolio allocation agents, modelleres IQN-komponenten i dette speciale som en decision-support agent med diskret handlingsrum. Dette følger af specialets mål om at generere fortolkelige buy/hold/sell-, risikojusterings- og strategiskift-anbefalinger frem for fuldt autonome continuous porteføljevægte.
+
+Så: discrete eller continuous?
+
+Mit klare svar:
+
+Hovedbidrag: discrete.
+Baseline-sammenligning: continuous FinRL.
+Optional/future work: continuous distributional variant.
+
+Det giver denne struktur:
+
+1. FinRL standard baseline
+   continuous action space
+   A2C, DDPG, PPO, TD3, SAC
+
+2. Distributional baseline
+   discrete action space
+   QR-DQN
+
+3. Thesis contribution
+   discrete action space
+   ObjectRL-style IQN
+
+4. Risk-aware DSS layer
+   conservative / moderate / aggressive risk profiles
+   q10 / q50 / q90 / CVaR / uncertainty
+
+5. Future work
+   continuous distributional actor-critic extension
+
+Det er både teknisk forsvarligt og direkte forankret i din problemformulering.
+
+
+------------------------------------------------------------------------------
+
+
+Din IQN skal derimod vælge mellem en liste af beslutninger, fx:
+
+0 = hold current portfolio
+1 = reduce risk
+2 = increase risk
+3 = move partly to cash
+4 = rebalance conservative
+5 = rebalance moderate
+6 = rebalance aggressive
+
+
+------------------------------------------------------------------------------
+
+
+Ja — din forståelse er rigtig:
+
+```text
+FinRL baselines:
+A2C, DDPG, PPO, TD3, SAC
+= FinRL + Stable-Baselines3
+= ikke ObjectRL
+```
+
+I dit FinRL-træningsscript oprettes miljøet med `StockTradingEnv`, pakkes som SB3-env med `get_sb_env()`, og modellerne hentes via `DRLAgent.get_model("a2c")`, `"ddpg"`, `"ppo"`, `"td3"` og `"sac"`. Det er altså FinRL/SB3-flowet. 
+
+## Det bedste design
+
+Jeg ville **ikke rette direkte i ObjectRLs filer**.
+
+Gør i stedet sådan her:
+
+```text
+StockInvestmentDSS/
+├─ external/
+│  └─ ObjectRL/              # read-only reference / optional dependency
+│
+├─ src/
+│  └─ stockdss/
+│     ├─ envs/
+│     │  ├─ finrl_continuous_env.py
+│     │  └─ finrl_discrete_env.py
+│     │
+│     ├─ agents/
+│     │  ├─ baselines/
+│     │  │  └─ finrl_sb3_baselines.py
+│     │  │
+│     │  ├─ qrdqn/
+│     │  │  └─ sb3_qrdqn_baseline.py
+│     │  │
+│     │  └─ iqn/
+│     │     ├─ iqn_agent.py
+│     │     ├─ iqn_network.py
+│     │     ├─ replay_buffer.py
+│     │     ├─ risk_policy.py
+│     │     └─ train_iqn.py
+```
+
+Så bruger du ObjectRL som **inspiration for struktur**, men du ejer selv din IQN-kode.
+
+## Hvorfor ikke redigere ObjectRL direkte?
+
+Fordi det hurtigt bliver rodet:
+
+```text
+- svært at vide hvad der er dit bidrag
+- svært at opdatere ObjectRL senere
+- svært at dokumentere i specialet
+- større risiko for at ødelægge ObjectRLs egne eksempler
+```
+
+Bedre:
+
+```text
+external/ObjectRL/
+= reference / vendor dependency
+
+src/stockdss/agents/iqn/
+= din egen ObjectRL-style implementation
+```
+
+Så kan du skrive i specialet:
+
+> The IQN implementation follows an ObjectRL-inspired modular design, separating environment interaction, replay buffer, network architecture, risk policy, and training loop.
+
+Det er stærkere end:
+
+> I modified ObjectRL internals.
+
+## Skal du kopiere FinRL-strukturen?
+
+Ikke direkte.
+
+FinRL-strukturen er god til:
+
+```text
+data download
+feature engineering
+StockTradingEnv
+SB3 baseline training
+backtesting
+```
+
+Men din IQN skal ikke ligne FinRLs SB3-wrapper. Den skal ligne en ren RL-agent:
+
+```text
+env.reset()
+for step:
+    action = agent.act(state)
+    next_state, reward, done, info = env.step(action)
+    replay_buffer.add(...)
+    agent.learn()
+```
+
+Det er mere ObjectRL/DQN/IQN-style.
+
+## Den rigtige progression
+
+Jeg ville ikke starte med ObjectRL-A2C/DDPG/PPO/TD3/SAC.
+
+Det giver ikke så meget værdi, fordi du allerede har dem gennem FinRL/SB3. Din baseline er netop FinRL-standardflowet: data-script, training-script og backtest-script. README’en beskriver også, at tutoriallen træner 5 DRL agents med Stable-Baselines3 og gemmer modellerne i `trained_models/`. 
+
+Så progressionen bør være:
+
+## Stage 1 — FinRL baselines
+
+Brug FinRL/SB3 som du gør nu:
+
+```text
+finrl_continuous_env.py
+A2C
+DDPG
+PPO
+TD3
+SAC
+MVO
+DJIA
+```
+
+Her skal du ikke blande ObjectRL ind.
+
+Formål:
+
+```text
+etabler klassiske baseline-resultater
+```
+
+## Stage 2 — Lav dit discrete environment
+
+Byg:
+
+```text
+src/stockdss/envs/finrl_discrete_env.py
+```
+
+Dette miljø bruger samme data:
+
+```text
+train_data_50.csv
+trade_data_50.csv
+train_data_500.csv
+trade_data_500.csv
+```
+
+men action space er diskret:
+
+```text
+0 = hold
+1 = reduce risk
+2 = increase risk
+3 = move to cash
+4 = rebalance conservative
+5 = rebalance moderate
+6 = rebalance aggressive
+```
+
+Formål:
+
+```text
+skab et miljø, hvor DQN/QR-DQN/IQN giver mening
+```
+
+## Stage 3 — Simpel sanity check
+
+Før IQN: lav en meget simpel random eller rule-based agent på `finrl_discrete_env.py`.
+
+Eksempel:
+
+```text
+Random agent
+Always hold
+Always conservative
+```
+
+Formål:
+
+```text
+sikre at miljøet virker før neural RL
+```
+
+## Stage 4 — QR-DQN baseline
+
+Brug QR-DQN som distributional baseline på samme discrete env.
+
+Formål:
+
+```text
+sammenlign IQN mod en kendt distributional DQN-variant
+```
+
+## Stage 5 — ObjectRL-style IQN
+
+Byg din egen:
+
+```text
+src/stockdss/agents/iqn/
+```
+
+med:
+
+```text
+iqn_network.py
+= PyTorch netværket: state + tau → quantile Q-values
+
+replay_buffer.py
+= experience replay
+
+risk_policy.py
+= mean/q10/q50/q90/CVaR action selection
+
+iqn_agent.py
+= act(), learn(), update_target()
+
+train_iqn.py
+= træningsloop
+```
+
+Formål:
+
+```text
+dit thesis contribution
+```
+
+## Stage 6 — DSS layer
+
+Byg output ovenpå IQN:
+
+```text
+recommendation
+risk profile
+q10/q50/q90
+CVaR
+uncertainty
+explanation
+audit log
+```
+
+Det er her specialet bliver decision support og ikke bare trading.
+
+---
+
+## Bør du lave ObjectRL-eksempler på A2C/DDPG/PPO/TD3/SAC?
+
+Mit svar: **nej, ikke som prioritet.**
+
+Det vil give dig en tredje baseline-stack:
+
+```text
+FinRL/SB3 A2C/DDPG/PPO/TD3/SAC
+ObjectRL A2C/DDPG/PPO/TD3/SAC
+IQN custom
+```
+
+Det bliver for meget og forvirrer specialet.
+
+Hold det rent:
+
+```text
+FinRL/SB3 = standard baselines
+ObjectRL-style = din egen IQN implementation style
+Dopamine = IQN reference implementation
+```
+
+## Skal du bruge `finrl_continuous_env.py` til ObjectRL?
+
+Ikke nødvendigt i første omgang.
+
+`finrl_continuous_env.py` er primært til FinRL/SB3-baselines.
+
+Din ObjectRL-style IQN bør bruge:
+
+```text
+finrl_discrete_env.py
+```
+
+fordi klassisk IQN passer til diskrete actions.
+
+## Den praktiske implementeringsplan
+
+Start sådan:
+
+```text
+1. Behold FinRL baseline scripts
+   data → train → backtest
+
+2. Lav src/stockdss/envs/finrl_discrete_env.py
+
+3. Test env med random agent
+
+4. Lav src/stockdss/agents/iqn/replay_buffer.py
+
+5. Lav src/stockdss/agents/iqn/iqn_network.py
+
+6. Lav src/stockdss/agents/iqn/iqn_agent.py
+
+7. Lav train_iqn.py
+
+8. Lav backtest_iqn.py
+
+9. Sammenlign mod FinRL baselines
+```
+
+## Kort svar
+
+Du skal **ikke** rette i ObjectRLs filer.
+
+Du skal **ikke** bygge ObjectRL-versioner af A2C/DDPG/PPO/TD3/SAC først.
+
+Du skal gøre dette:
+
+```text
+FinRL/SB3:
+bruges til continuous baselines
+
+ObjectRL-inspired PyTorch:
+bruges til din egen IQN
+
+Dopamine:
+bruges som reference for korrekt IQN-design
+
+finrl_discrete_env.py:
+bruges til QR-DQN og IQN
+```
+
+Det er den mest rene, realistiske og akademisk forsvarlige vej.
+
+
+
+
+--------------------------------------
+
+
+Ja — din forståelse er rigtig:
+
+```text
+FinRL baselines:
+A2C, DDPG, PPO, TD3, SAC
+= FinRL + Stable-Baselines3
+= ikke ObjectRL
+```
+
+I dit FinRL-træningsscript oprettes miljøet med `StockTradingEnv`, pakkes som SB3-env med `get_sb_env()`, og modellerne hentes via `DRLAgent.get_model("a2c")`, `"ddpg"`, `"ppo"`, `"td3"` og `"sac"`. Det er altså FinRL/SB3-flowet. 
+
+## Det bedste design
+
+Jeg ville **ikke rette direkte i ObjectRLs filer**.
+
+Gør i stedet sådan her:
+
+```text
+StockInvestmentDSS/
+├─ external/
+│  └─ ObjectRL/              # read-only reference / optional dependency
+│
+├─ src/
+│  └─ stockdss/
+│     ├─ envs/
+│     │  ├─ finrl_continuous_env.py
+│     │  └─ finrl_discrete_env.py
+│     │
+│     ├─ agents/
+│     │  ├─ baselines/
+│     │  │  └─ finrl_sb3_baselines.py
+│     │  │
+│     │  ├─ qrdqn/
+│     │  │  └─ sb3_qrdqn_baseline.py
+│     │  │
+│     │  └─ iqn/
+│     │     ├─ iqn_agent.py
+│     │     ├─ iqn_network.py
+│     │     ├─ replay_buffer.py
+│     │     ├─ risk_policy.py
+│     │     └─ train_iqn.py
+```
+
+Så bruger du ObjectRL som **inspiration for struktur**, men du ejer selv din IQN-kode.
+
+## Hvorfor ikke redigere ObjectRL direkte?
+
+Fordi det hurtigt bliver rodet:
+
+```text
+- svært at vide hvad der er dit bidrag
+- svært at opdatere ObjectRL senere
+- svært at dokumentere i specialet
+- større risiko for at ødelægge ObjectRLs egne eksempler
+```
+
+Bedre:
+
+```text
+external/ObjectRL/
+= reference / vendor dependency
+
+src/stockdss/agents/iqn/
+= din egen ObjectRL-style implementation
+```
+
+Så kan du skrive i specialet:
+
+> The IQN implementation follows an ObjectRL-inspired modular design, separating environment interaction, replay buffer, network architecture, risk policy, and training loop.
+
+Det er stærkere end:
+
+> I modified ObjectRL internals.
+
+## Skal du kopiere FinRL-strukturen?
+
+Ikke direkte.
+
+FinRL-strukturen er god til:
+
+```text
+data download
+feature engineering
+StockTradingEnv
+SB3 baseline training
+backtesting
+```
+
+Men din IQN skal ikke ligne FinRLs SB3-wrapper. Den skal ligne en ren RL-agent:
+
+```text
+env.reset()
+for step:
+    action = agent.act(state)
+    next_state, reward, done, info = env.step(action)
+    replay_buffer.add(...)
+    agent.learn()
+```
+
+Det er mere ObjectRL/DQN/IQN-style.
+
+## Den rigtige progression
+
+Jeg ville ikke starte med ObjectRL-A2C/DDPG/PPO/TD3/SAC.
+
+Det giver ikke så meget værdi, fordi du allerede har dem gennem FinRL/SB3. Din baseline er netop FinRL-standardflowet: data-script, training-script og backtest-script. README’en beskriver også, at tutoriallen træner 5 DRL agents med Stable-Baselines3 og gemmer modellerne i `trained_models/`. 
+
+Så progressionen bør være:
+
+## Stage 1 — FinRL baselines
+
+Brug FinRL/SB3 som du gør nu:
+
+```text
+finrl_continuous_env.py
+A2C
+DDPG
+PPO
+TD3
+SAC
+MVO
+DJIA
+```
+
+Her skal du ikke blande ObjectRL ind.
+
+Formål:
+
+```text
+etabler klassiske baseline-resultater
+```
+
+## Stage 2 — Lav dit discrete environment
+
+Byg:
+
+```text
+src/stockdss/envs/finrl_discrete_env.py
+```
+
+Dette miljø bruger samme data:
+
+```text
+train_data_50.csv
+trade_data_50.csv
+train_data_500.csv
+trade_data_500.csv
+```
+
+men action space er diskret:
+
+```text
+0 = hold
+1 = reduce risk
+2 = increase risk
+3 = move to cash
+4 = rebalance conservative
+5 = rebalance moderate
+6 = rebalance aggressive
+```
+
+Formål:
+
+```text
+skab et miljø, hvor DQN/QR-DQN/IQN giver mening
+```
+
+## Stage 3 — Simpel sanity check
+
+Før IQN: lav en meget simpel random eller rule-based agent på `finrl_discrete_env.py`.
+
+Eksempel:
+
+```text
+Random agent
+Always hold
+Always conservative
+```
+
+Formål:
+
+```text
+sikre at miljøet virker før neural RL
+```
+
+## Stage 4 — QR-DQN baseline
+
+Brug QR-DQN som distributional baseline på samme discrete env.
+
+Formål:
+
+```text
+sammenlign IQN mod en kendt distributional DQN-variant
+```
+
+## Stage 5 — ObjectRL-style IQN
+
+Byg din egen:
+
+```text
+src/stockdss/agents/iqn/
+```
+
+med:
+
+```text
+iqn_network.py
+= PyTorch netværket: state + tau → quantile Q-values
+
+replay_buffer.py
+= experience replay
+
+risk_policy.py
+= mean/q10/q50/q90/CVaR action selection
+
+iqn_agent.py
+= act(), learn(), update_target()
+
+train_iqn.py
+= træningsloop
+```
+
+Formål:
+
+```text
+dit thesis contribution
+```
+
+## Stage 6 — DSS layer
+
+Byg output ovenpå IQN:
+
+```text
+recommendation
+risk profile
+q10/q50/q90
+CVaR
+uncertainty
+explanation
+audit log
+```
+
+Det er her specialet bliver decision support og ikke bare trading.
+
+---
+
+## Bør du lave ObjectRL-eksempler på A2C/DDPG/PPO/TD3/SAC?
+
+Mit svar: **nej, ikke som prioritet.**
+
+Det vil give dig en tredje baseline-stack:
+
+```text
+FinRL/SB3 A2C/DDPG/PPO/TD3/SAC
+ObjectRL A2C/DDPG/PPO/TD3/SAC
+IQN custom
+```
+
+Det bliver for meget og forvirrer specialet.
+
+Hold det rent:
+
+```text
+FinRL/SB3 = standard baselines
+ObjectRL-style = din egen IQN implementation style
+Dopamine = IQN reference implementation
+```
+
+## Skal du bruge `finrl_continuous_env.py` til ObjectRL?
+
+Ikke nødvendigt i første omgang.
+
+`finrl_continuous_env.py` er primært til FinRL/SB3-baselines.
+
+Din ObjectRL-style IQN bør bruge:
+
+```text
+finrl_discrete_env.py
+```
+
+fordi klassisk IQN passer til diskrete actions.
+
+## Den praktiske implementeringsplan
+
+Start sådan:
+
+```text
+1. Behold FinRL baseline scripts
+   data → train → backtest
+
+2. Lav src/stockdss/envs/finrl_discrete_env.py
+
+3. Test env med random agent
+
+4. Lav src/stockdss/agents/iqn/replay_buffer.py
+
+5. Lav src/stockdss/agents/iqn/iqn_network.py
+
+6. Lav src/stockdss/agents/iqn/iqn_agent.py
+
+7. Lav train_iqn.py
+
+8. Lav backtest_iqn.py
+
+9. Sammenlign mod FinRL baselines
+```
+
+## Kort svar
+
+Du skal **ikke** rette i ObjectRLs filer.
+
+Du skal **ikke** bygge ObjectRL-versioner af A2C/DDPG/PPO/TD3/SAC først.
+
+Du skal gøre dette:
+
+```text
+FinRL/SB3:
+bruges til continuous baselines
+
+ObjectRL-inspired PyTorch:
+bruges til din egen IQN
+
+Dopamine:
+bruges som reference for korrekt IQN-design
+
+finrl_discrete_env.py:
+bruges til QR-DQN og IQN
+```
+
+Det er den mest rene, realistiske og akademisk forsvarlige vej.
+
+
+--------------------------------------
+
+
+Foreslået struktur
+src/stockdss/
+├─ envs/
+│  ├─ finrl_discrete_env.py
+│  └─ finrl_continuous_env.py
+│
+├─ agents/
+│  └─ iqn/
+│     ├─ __init__.py
+│     ├─ iqn_network.py
+│     ├─ replay_buffer.py
+│     ├─ risk_policy.py
+│     ├─ iqn_agent.py
+│     └─ train_iqn.py
+│
+├─ evaluation/
+│  ├─ backtest_iqn.py
+│  └─ metrics.py
+
+Og så en notebook senere:
+
+notebooks/
+└─ 03_iqn_finrl_dss_explained.ipynb
+
+
+Den notebook skal ikke indeholde hele agenten. Den skal gøre:
+
+from stockdss.envs.finrl_discrete_env import FinRLDiscreteEnv
+from stockdss.agents.iqn.iqn_agent import IQNAgent
+
+
+Start med:
+
+iqn_network.py
+replay_buffer.py
+iqn_agent.py
+train_iqn_cartpole.py
+
+
+
+Min anbefaling
+
+Brug dette som akademisk navn:
+
+D-IQN-DSS
+
+med fuld titel:
+
+Discrete Implicit Quantile Network for Stock Investment Decision Support
+
+Det passer godt, fordi det siger:
+
+Discrete
+= diskret action space
+
+Implicit Quantile Network
+= IQN-metoden
+
+Stock Investment Decision Support
+= dit specialeproblem
+I kode kunne det hedde
+
+I fil-/class-navne ville jeg bruge noget roligt og professionelt:
+
+src/stockdss/agents/iqn/
+    iqn_agent.py
+    iqn_network.py
+    replay_buffer.py
+    risk_policy.py
+
+Class-navne:
+
+class DiscreteIQNAgent:
+    ...
+class IQNNetwork:
+    ...
+class RiskSensitivePolicy:
+    ...
+
+Environment:
+
+class FinRLDiscreteEnv:
+    ...
+
+eller mere præcist:
+
+class FinRLDiscreteDecisionEnv:
+    ...
+Undgå disse som akademiske hovednavne
+
+Jeg ville undgå:
+
+GuldmandIQN
+CustomIQN
+MyIQN
+StockIQN
+FinIQN
+
+Ikke fordi de er “forkerte”, men fordi de enten lyder personlige, generiske eller uklare.
+
+CustomIQN siger heller ikke hvad der er custom.
+
+God navngivning i specialet
+
+Du kan skrive:
+
+The proposed method is referred to as D-IQN-DSS, a discrete-action Implicit Quantile Network adapted for stock investment decision support.
+
+På dansk:
+
+Den foreslåede metode betegnes D-IQN-DSS, en diskret-action Implicit Quantile Network-variant tilpasset beslutningsstøtte for aktieinvesteringer.
+
+Hvis du vil have et lidt kortere navn
+
+Disse er også acceptable:
+
+DSS-IQN
+
+= Decision Support System IQN
+
+StockDSS-IQN
+
+= IQN-modulen i StockDSS-projektet
+
+Discrete Stock IQN
+
+= meget læsbart, men lidt mindre akademisk elegant
+
+Min favorit er:
+
+D-IQN-DSS
+
+Og i repo/kode:
+
+stockdss.agents.iqn.DiscreteIQNAgent
+
+Så får du både et akademisk metode-navn og et rent kode-navn.
+
+
+-------------------------------
+
+
+
+ObjectRL-strukturen
+
+Jeg har kigget på ObjectRL-zippen. Den bruger ikke primært en /algorithms/-mappe. Den bruger mere denne struktur:
+
+objectrl/
+├─ agents/
+├─ config/
+│  └─ model_configs/
+├─ experiments/
+├─ models/
+├─ nets/
+├─ replay_buffers/
+├─ utils/
+└─ loggers/
+
+Så hvis vi vil være ObjectRL-inspirerede, bør vi ikke bruge:
+
+src/stockdss/algorithms/iqn/
+
+som hovedstruktur.
+
+Det er mere ObjectRL-agtigt at gøre sådan her:
+
+src/stockdss/
+├─ envs/
+│  ├─ finrl_continuous_env.py
+│  └─ finrl_discrete_env.py
+│
+├─ rl/
+│  ├─ agents/
+│  │  └─ iqn_agent.py
+│  │
+│  ├─ config/
+│  │  └─ iqn_config.py
+│  │
+│  ├─ experiments/
+│  │  ├─ train_iqn_cartpole.py
+│  │  ├─ train_iqn_finrl_50.py
+│  │  └─ backtest_iqn_finrl_50.py
+│  │
+│  ├─ models/
+│  │  └─ iqn.py
+│  │
+│  ├─ nets/
+│  │  └─ iqn_net.py
+│  │
+│  ├─ replay_buffers/
+│  │  └─ replay_buffer.py
+│  │
+│  └─ policies/
+│     └─ risk_policy.py
+
+Det er en god mellemvej:
+
+ObjectRL-style struktur
++
+StockDSS-specifik namespace
++
+ikke direkte ændring af ObjectRLs egne filer
+
+
+----------------------
+
+
+
+src/stockdss/
+├─ envs/
+│  ├─ __init__.py
+│  ├─ finrl_continuous_env.py
+│  └─ finrl_discrete_env.py
+│
+├─ rl/
+│  ├─ __init__.py
+│  ├─ agents/
+│  │  ├─ __init__.py
+│  │  └─ iqn_agent.py
+│  │
+│  ├─ config/
+│  │  ├─ __init__.py
+│  │  └─ iqn_config.py
+│  │
+│  ├─ experiments/
+│  │  ├─ __init__.py
+│  │  ├─ train_iqn_cartpole.py
+│  │  ├─ train_iqn_finrl_50.py
+│  │  └─ backtest_iqn_finrl_50.py
+│  │
+│  ├─ models/
+│  │  ├─ __init__.py
+│  │  └─ iqn.py
+│  │
+│  ├─ nets/
+│  │  ├─ __init__.py
+│  │  └─ iqn_net.py
+│  │
+│  ├─ policies/
+│  │  ├─ __init__.py
+│  │  └─ risk_policy.py
+│  │
+│  └─ replay_buffers/
+│     ├─ __init__.py
+│     └─ replay_buffer.py
+
+
+-----------------------
+
+
+src/stockdss/
+├─ envs/
+│  ├─ __init__.py
+│  ├─ finrl_continuous_env.py
+│  └─ finrl_discrete_env.py
+│
+├─ rl/
+│  ├─ __init__.py
+│  ├─ agents/
+│  │  ├─ __init__.py
+│  │  └─ iqn_agent.py
+│  │
+│  ├─ config/
+│  │  ├─ __init__.py
+│  │  └─ iqn_config.py
+│  │
+│  ├─ experiments/
+│  │  ├─ __init__.py
+│  │  ├─ train_iqn_cartpole.py
+│  │  ├─ train_iqn_finrl_50.py
+│  │  └─ backtest_iqn_finrl_50.py
+│  │
+│  ├─ models/
+│  │  ├─ __init__.py
+│  │  └─ iqn.py
+│  │
+│  ├─ nets/
+│  │  ├─ __init__.py
+│  │  └─ iqn_net.py
+│  │
+│  ├─ policies/
+│  │  ├─ __init__.py
+│  │  └─ risk_policy.py
+│  │
+│  └─ replay_buffers/
+│     ├─ __init__.py
+│     └─ replay_buffer.py

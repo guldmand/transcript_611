@@ -1,0 +1,149 @@
+ChatGPT Port plan:
+
+
+Ja — Copilots assessment er **meget brugbar**, og den ligger tæt på min egen vurdering.
+
+Den vigtigste konklusion er korrekt:
+
+```text
+V2 = canonical thesis experiment pipeline
+V1 = visualization/design donor
+```
+
+Copilot peger også på det rigtige “port now”-område: **IQN distributional decision-support visualizations**, ikke V1’s træningskode, miljø, PIT split eller runner. Det er præcis den rigtige vej ift. problemformuleringen, fordi thesisen handler om decision support under uncertainty — ikke kun learning curves. 
+
+## Det stærkeste i Copilots vurdering
+
+Copilot identificerer V1’s centrale fil som:
+
+```text
+external/ObjectRL_style/src/stockdss/rl/experiments/visualize_iqn_decision_distribution.py
+```
+
+og anbefaler at portere idéerne:
+
+```text
+1. IQN quantile function per action
+2. Approximate return distribution per action
+3. Risk-adjusted score per action
+4. q10/q25/q50/q75/q90/CVaR/score decision table
+5. Combined 4-panel IQN decision dashboard
+```
+
+Det er præcis det, V2 mangler lige nu: V2 har clean diagnostic plots, men de er mest **debug/evaluation plots**. De viser seed-level behavior, HOLD collapse, loss, epsilon og learning curves. De forklarer ikke endnu særlig godt:
+
+```text
+“Why did the DSS recommend this action?”
+```
+
+V1’s dashboard gør netop dét.
+
+## Det jeg ville rette/nuancere i Copilots vurdering
+
+Der er én ting, jeg ville være lidt forsigtig med:
+
+Copilot skriver, at seed 5 bør bruges som “representative seed” og at `train_step=10000` eller `25000` kan bruges. Jeg er enig i retningen, men jeg ville ikke kun lave én snapshot. Jeg ville lave **to snapshot modes**:
+
+```text
+A) final policy snapshot: seed 5, train_step=25000
+B) peak checkpoint snapshot: seed 5, train_step=10000
+```
+
+Hvorfor?
+
+Fordi clean 25k evidence allerede viser, at eval return topper omkring 10k og falder mod 25k. Hvis du kun viser 25k, viser du final policy. Hvis du også viser 10k, kan du forklare early-stopping-hypotesen bedre.
+
+Jeg ville også overveje:
+
+```text
+C) contrast snapshot: seed 6, train_step=25000
+```
+
+Det viser, hvordan en HOLD-collapse distribution ser ud.
+
+Så min port-prioritet er:
+
+```text
+1. seed 5 @ 25000 — final active policy
+2. seed 5 @ 10000 — peak/early-stopping diagnostic
+3. seed 6 @ 25000 — collapsed policy contrast
+```
+
+## Jeg ville ikke implementere endnu uden én fælles beslutningsnote
+
+Du har nu:
+
+```text
+1. ChatGPT vurdering
+2. Copilot vurdering
+3. Snart Claude Code vurdering
+4. Din egen vurdering
+```
+
+Før vi implementerer `run_v1_visualization_ports.py`, ville jeg lave én kort beslutningsfil:
+
+```text
+outputs/run_registry/v1_visualization_port_decision.md
+```
+
+Den skal være meget kort og sige:
+
+```text
+- What will be ported now
+- What will be deferred
+- What will not be ported
+- Why V2 remains canonical
+- Which seed/checkpoints are used
+- Output folder
+```
+
+## Min anbefalede beslutning
+
+Jeg ville skrive beslutningen sådan her:
+
+```text
+Port now:
+  - V1 IQN quantile function per action
+  - V1 return distribution per action
+  - V1 risk-adjusted score-per-action bar chart
+  - V1 q10/q25/q50/q75/q90/CVaR decision table
+  - V1 combined 4-panel decision dashboard
+
+Implement as:
+  - new V2-native post-run visualization script
+  - no training
+  - read only V2 eval_distributions.csv
+  - output to outputs/run_registry/v1_visualization_ports/
+
+Use snapshots:
+  - seed 5 @ train_step=25000
+  - seed 5 @ train_step=10000
+  - seed 6 @ train_step=25000 as collapse contrast
+
+Defer:
+  - algorithmic trading baselines
+  - multi-source dashboard
+  - portfolio-level strategy comparison dashboard
+
+Do not port:
+  - V1 environment
+  - V1 PIT split
+  - V1 training runner
+  - V1 replay/IQN training infrastructure
+```
+
+## Roadmap-status
+
+Efter Copilots assessment kan du opdatere mental status til:
+
+```text
+V1 thesis visualization ports ⬅️ NOW
+  - V1/V2 assessment by ChatGPT ✅
+  - V1/V2 assessment by Copilot ✅
+  - V1/V2 assessment by Claude Code ⬅️ optional next
+  - port decision note ⬅️ next
+  - implement V2-native post-run visualization script after decision
+```
+
+Hvis du vil følge din oprindelige plan med 3 vurderinger, så næste step er ikke implementation endnu. Næste step er: **bed Claude Code lave samme vurdering**.
+Hvis du vil spare tid, kan du lave port decision note nu, fordi ChatGPT og Copilot allerede er enige.
